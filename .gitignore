@@ -1,0 +1,14 @@
+node_modules
+dist
+.astro
+uploads
+data.db*
+.wrangler
+
+
+images/
+scripts/images.sql
+.playwright-mcp
+
+# Local research data and backups. Never publish.
+scratch/

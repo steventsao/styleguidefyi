@@ -1,0 +1,4 @@
+# Let agents and scripts on other origins fetch the markdown version.
+/styleguide.md
+  Access-Control-Allow-Origin: *
+  Content-Type: text/markdown; charset=utf-8

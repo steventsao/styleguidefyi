@@ -1,0 +1,14 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "styleguidefyi",
+	"compatibility_date": "2026-02-24",
+	// Static site: `astro build` writes to ./dist and the Worker only serves those files.
+	"assets": {
+		"directory": "./dist",
+		"not_found_handling": "404-page",
+	},
+	"routes": [
+		{ "pattern": "styleguide.fyi", "custom_domain": true },
+		{ "pattern": "www.styleguide.fyi", "custom_domain": true },
+	],
+}

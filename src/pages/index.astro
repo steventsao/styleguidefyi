@@ -1,0 +1,566 @@
+---
+import { Code } from "astro:components";
+import Base from "../layouts/Base.astro";
+import { styleguide } from "../data/styleguide";
+import { countRules } from "../lib/styleguide";
+import { createTools } from "../lib/webmcp-tools";
+
+const ruleCount = countRules(styleguide);
+
+// Only the tool metadata is rendered here; the page actions run in the browser.
+const tools = createTools(styleguide, { revealSection() {}, filterRules() {} });
+
+const CODE_THEMES = { light: "github-light", dark: "github-dark" } as const;
+
+function escapeHtml(text: string): string {
+	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/** Rule text uses backticks for inline code and nothing else. */
+function inlineCode(text: string): string {
+	return escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+const registrationExample = `const modelContext = document.modelContext ?? navigator.modelContext;
+
+await modelContext?.registerTool({
+  name: "search-rules",
+  description: "Find style guide rules by keyword...",
+  inputSchema: {
+    type: "object",
+    properties: { query: { type: "string" } },
+    required: ["query"],
+  },
+  annotations: { readOnlyHint: true },
+  execute: async ({ query }) => searchRules(styleguide, query),
+});`;
+---
+
+<Base
+	title="styleguide.fyi — a coding style guide for you and your agent"
+	description={`${ruleCount} practical coding rules, written by Claude. Read them, curl them as markdown, or let a browser agent query them over WebMCP.`}
+>
+	<section class="hero">
+		<p class="eyebrow">{ruleCount} rules · updated {styleguide.updated}</p>
+		<h1>A coding style guide you can hand to your agent.</h1>
+		<p class="lede">{styleguide.intro}</p>
+		<div class="hero-actions">
+			<button type="button" class="button button-primary" id="copy-markdown">Copy as markdown</button>
+			<a class="button" href="/styleguide.md">styleguide.md</a>
+			<a class="button" href="#webmcp">WebMCP tools</a>
+		</div>
+	</section>
+
+	<div class="layout" id="rules">
+		<aside class="sidebar" aria-label="Sections">
+			<label class="filter">
+				<span class="filter-label">Filter rules</span>
+				<input type="search" id="rule-filter" placeholder="errors, naming, mocks…" autocomplete="off" />
+			</label>
+			<p class="filter-count" id="filter-count" aria-live="polite"></p>
+			<ol class="toc">
+				{
+					styleguide.sections.map((section) => (
+						<li>
+							<a href={`#${section.id}`}>{section.title}</a>
+							<span class="toc-count">{section.rules.length}</span>
+						</li>
+					))
+				}
+			</ol>
+		</aside>
+
+		<div class="content">
+			{
+				styleguide.sections.map((section, sectionIndex) => (
+					<section class="guide-section" id={section.id} data-section>
+						<header class="section-header">
+							<p class="section-number">{String(sectionIndex + 1).padStart(2, "0")}</p>
+							<h2>{section.title}</h2>
+							<p class="section-summary">{section.summary}</p>
+						</header>
+
+						{section.rules.map((rule, ruleIndex) => (
+							<article class="rule" id={rule.id} data-rule>
+								<h3>
+									<a class="rule-number" href={`#${rule.id}`} aria-label={`Link to rule: ${rule.title}`}>
+										{sectionIndex + 1}.{ruleIndex + 1}
+									</a>
+									<span set:html={inlineCode(rule.title)} />
+								</h3>
+								<p class="rule-why" set:html={inlineCode(rule.why)} />
+								{(rule.avoid || rule.prefer) && (
+									<div class="examples">
+										{rule.avoid && (
+											<figure class="example example-avoid">
+												<figcaption>Avoid</figcaption>
+												<Code code={rule.avoid} lang={(rule.lang ?? "ts") as any} themes={CODE_THEMES} />
+											</figure>
+										)}
+										{rule.prefer && (
+											<figure class="example example-prefer">
+												<figcaption>Prefer</figcaption>
+												<Code code={rule.prefer} lang={(rule.lang ?? "ts") as any} themes={CODE_THEMES} />
+											</figure>
+										)}
+									</div>
+								)}
+							</article>
+						))}
+					</section>
+				))
+			}
+			<p class="no-matches" id="no-matches" hidden>No rule contains all of those words.</p>
+
+			<section class="agents" id="webmcp">
+				<header class="section-header">
+					<p class="section-number">↳</p>
+					<h2>Use it from an agent</h2>
+					<p class="section-summary">Three ways in. Pick the one your agent can reach.</p>
+				</header>
+
+				<h3>1. Markdown, for a terminal agent</h3>
+				<p>The whole guide is one file. Append it to the instructions your agent already reads.</p>
+				<Code code="curl -s https://styleguide.fyi/styleguide.md >> AGENTS.md" lang="bash" themes={CODE_THEMES} />
+
+				<h3>2. WebMCP, for a browser agent</h3>
+				<p>
+					This page registers {tools.length} read-only tools with
+					<a href="https://webmachinelearning.github.io/webmcp/">WebMCP</a>. An agent that runs in the browser
+					calls them as functions and gets structured results, with no scraping of this page.
+				</p>
+				<p class="webmcp-status" id="webmcp-status" data-state="checking">Checking this browser for WebMCP…</p>
+
+				<ul class="tools">
+					{
+						tools.map((tool) => {
+							const properties = (tool.inputSchema.properties ?? {}) as Record<
+								string,
+								{ enum?: string[]; description?: string }
+							>;
+							return (
+								<li class="tool">
+									<form data-tool={tool.name}>
+										<div class="tool-head">
+											<code class="tool-name">{tool.name}</code>
+											<div class="tool-inputs">
+												{Object.entries(properties).map(([name, property]) =>
+													property.enum ? (
+														<select name={name} aria-label={name} required>
+															{property.enum.map((value) => (
+																<option value={value}>{value}</option>
+															))}
+														</select>
+													) : (
+														<input type="text" name={name} aria-label={name} placeholder={name} required />
+													)
+												)}
+												<button type="submit" class="button">Run</button>
+											</div>
+										</div>
+										<p class="tool-description">{tool.description}</p>
+										<pre class="tool-output" hidden />
+									</form>
+								</li>
+							);
+						})
+					}
+				</ul>
+				<p class="hint">
+					Run calls the same function an agent calls and shows the exact result. To try it with a real
+					agent, use Chrome 149 or later, enable <code>chrome://flags/#enable-webmcp-testing</code>, and open the
+					Model Context Tool Inspector extension on this page.
+				</p>
+
+				<h3>3. Copy the pattern</h3>
+				<p>
+					Registration is one call per tool. Return problems the agent can correct as values: WebMCP drops the
+					reason of a rejected promise.
+				</p>
+				<Code code={registrationExample} lang="ts" themes={CODE_THEMES} />
+			</section>
+		</div>
+	</div>
+</Base>
+
+<script>
+	import "../scripts/page.ts";
+</script>
+
+<style>
+	.hero {
+		max-width: var(--page-width);
+		margin: 0 auto;
+		padding: 72px 16px 56px;
+	}
+
+	.eyebrow {
+		margin: 0 0 16px;
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		color: var(--accent);
+	}
+
+	h1 {
+		margin: 0;
+		max-width: 18ch;
+		font-size: clamp(2rem, 6vw, 3.25rem);
+		font-weight: 600;
+		line-height: 1.08;
+		letter-spacing: -0.03em;
+		text-wrap: balance;
+	}
+
+	.lede {
+		margin: 24px 0 0;
+		max-width: 60ch;
+		font-size: 1.125rem;
+		color: var(--text-secondary);
+	}
+
+	.hero-actions {
+		margin-top: 32px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+
+	.layout {
+		max-width: var(--page-width);
+		margin: 0 auto;
+		padding: 0 16px;
+		display: grid;
+		grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+		gap: 56px;
+		border-top: 1px solid var(--border);
+	}
+
+	.sidebar {
+		position: sticky;
+		top: var(--header-height);
+		align-self: start;
+		max-height: calc(100vh - var(--header-height));
+		overflow-y: auto;
+		padding: 32px 0;
+	}
+
+	.filter-label {
+		display: block;
+		margin-bottom: 6px;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--muted);
+	}
+
+	.filter input {
+		width: 100%;
+		padding: 8px 10px;
+		font: inherit;
+		font-size: 0.875rem;
+		color: var(--text);
+		background: var(--bg-raised);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+	}
+
+	.filter-count {
+		min-height: 1.4em;
+		margin: 6px 0 0;
+		font-size: 0.75rem;
+		color: var(--muted);
+	}
+
+	.toc {
+		margin: 16px 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.875rem;
+	}
+
+	.toc li {
+		display: flex;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 5px 0;
+	}
+
+	.toc a {
+		color: var(--text-secondary);
+		text-decoration: none;
+	}
+
+	.toc a:hover {
+		color: var(--accent);
+	}
+
+	.toc-count {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--muted);
+	}
+
+	.content {
+		--rule-indent: 40px;
+		min-width: 0;
+		max-width: 720px;
+		padding-bottom: 32px;
+	}
+
+	.guide-section,
+	.agents {
+		padding-top: 48px;
+	}
+
+	.section-header {
+		margin-bottom: 8px;
+	}
+
+	.section-number {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		color: var(--accent);
+	}
+
+	h2 {
+		margin: 4px 0 0;
+		font-size: 1.75rem;
+		font-weight: 600;
+		line-height: 1.2;
+		letter-spacing: -0.02em;
+	}
+
+	.section-summary {
+		margin: 8px 0 0;
+		color: var(--text-secondary);
+	}
+
+	.rule {
+		padding: 28px 0;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.rule:last-of-type {
+		border-bottom: 0;
+	}
+
+	.rule h3 {
+		margin: 0;
+		display: flex;
+		align-items: baseline;
+		font-size: 1.125rem;
+		font-weight: 600;
+		line-height: 1.35;
+	}
+
+	.rule-number {
+		flex: none;
+		width: var(--rule-indent);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		font-weight: 400;
+		color: var(--muted);
+		text-decoration: none;
+	}
+
+	.rule-number:hover {
+		color: var(--accent);
+	}
+
+	.rule-why {
+		margin: 8px 0 0 var(--rule-indent);
+		color: var(--text-secondary);
+	}
+
+	.rule:target,
+	.rule.is-revealed,
+	.guide-section.is-revealed > .section-header {
+		background: var(--accent-soft);
+		box-shadow: 0 0 0 12px var(--accent-soft);
+		border-radius: 2px;
+	}
+
+	.examples {
+		margin: 16px 0 0 var(--rule-indent);
+		display: grid;
+		gap: 12px;
+	}
+
+	.example {
+		margin: 0;
+		min-width: 0;
+		border: 1px solid var(--border);
+		border-left: 3px solid var(--muted);
+		border-radius: var(--radius);
+		background: var(--code-bg);
+		overflow: hidden;
+	}
+
+	.example-avoid {
+		border-left-color: var(--avoid);
+	}
+
+	.example-prefer {
+		border-left-color: var(--prefer);
+	}
+
+	.example figcaption {
+		padding: 6px 14px 0;
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.example-avoid figcaption {
+		color: var(--avoid);
+	}
+
+	.example-prefer figcaption {
+		color: var(--prefer);
+	}
+
+	.content :global(.astro-code) {
+		margin: 0;
+		padding: 10px 14px 12px;
+		font-size: 0.8125rem;
+		line-height: 1.6;
+		background: var(--code-bg) !important;
+		overflow-x: auto;
+	}
+
+	.agents > :global(.astro-code) {
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+	}
+
+	.agents h3 {
+		margin: 32px 0 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+	}
+
+	.agents p {
+		margin: 8px 0 12px;
+		color: var(--text-secondary);
+	}
+
+	.webmcp-status {
+		padding: 10px 14px;
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		border: 1px solid var(--border);
+		border-left: 3px solid var(--muted);
+		border-radius: var(--radius);
+		background: var(--bg-raised);
+	}
+
+	.webmcp-status[data-state="active"] {
+		border-left-color: var(--prefer);
+		color: var(--text);
+	}
+
+	.webmcp-status[data-state="failed"] {
+		border-left-color: var(--avoid);
+		color: var(--text);
+	}
+
+	.tools {
+		margin: 16px 0 0;
+		padding: 0;
+		list-style: none;
+		display: grid;
+		gap: 12px;
+	}
+
+	.tool {
+		padding: 14px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--bg-raised);
+	}
+
+	.tool-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+	}
+
+	.tool-name {
+		font-weight: 600;
+		color: var(--accent);
+		background: none !important;
+		border: 0 !important;
+		padding: 0 !important;
+	}
+
+	.tool-inputs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.tool-inputs input,
+	.tool-inputs select {
+		padding: 7px 10px;
+		font: inherit;
+		font-size: 0.875rem;
+		color: var(--text);
+		background: var(--bg);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+	}
+
+	.tool .tool-description {
+		margin: 8px 0 0;
+		font-size: 0.875rem;
+	}
+
+	.tool-output {
+		max-height: 320px;
+		margin: 12px 0 0;
+		padding: 12px;
+		overflow: auto;
+		font-size: 0.75rem;
+		line-height: 1.55;
+		white-space: pre-wrap;
+		background: var(--code-bg);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+	}
+
+	.agents .hint {
+		font-size: 0.875rem;
+		color: var(--muted);
+	}
+
+	.no-matches {
+		padding: 48px 0;
+		color: var(--muted);
+	}
+
+	@media (max-width: 860px) {
+		.layout {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 0;
+		}
+
+		.sidebar {
+			position: static;
+			max-height: none;
+			padding: 24px 0 0;
+		}
+
+		.toc {
+			display: none;
+		}
+
+		.rule-why,
+		.examples {
+			margin-left: 0;
+		}
+	}
+</style>

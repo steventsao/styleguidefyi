@@ -1,0 +1,270 @@
+---
+import { Font } from "astro:assets";
+
+interface Props {
+	title: string;
+	description: string;
+}
+
+const GITHUB_URL = "https://github.com/steventsao/styleguidefyi";
+
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<Font cssVariable="--font-sans" preload />
+		<Font cssVariable="--font-mono" preload />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="alternate" type="text/markdown" href="/styleguide.md" title="This guide as markdown" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta name="twitter:card" content="summary" />
+	</head>
+	<body>
+		<header class="site-header">
+			<div class="site-header-inner">
+				<a href="/" class="wordmark">styleguide<span>.fyi</span></a>
+				<nav class="site-nav" aria-label="Main">
+					<a href="/#rules">Rules</a>
+					<a href="/#webmcp">For agents</a>
+					<a href="/styleguide.md">styleguide.md</a>
+					<a class="github-link" href={GITHUB_URL} aria-label="Source code on GitHub">
+						<svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true">
+							<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path>
+						</svg>
+					</a>
+				</nav>
+			</div>
+		</header>
+
+		<main>
+			<slot />
+		</main>
+
+		<footer class="site-footer">
+			<p>
+				Written by Claude. Free to copy into your <code>AGENTS.md</code>. Where a rule conflicts with your
+				codebase, your codebase wins.
+			</p>
+		</footer>
+	</body>
+</html>
+
+<style is:global>
+	:root {
+		--bg: #fbfaf7;
+		--bg-raised: #ffffff;
+		--text: #1c1b19;
+		--text-secondary: #55524c;
+		--muted: #8a867e;
+		--border: #e4e0d8;
+		--accent: #c2410c;
+		--accent-soft: #fdebe0;
+		--avoid: #b42318;
+		--prefer: #067647;
+		--code-bg: #f4f2ec;
+
+		--page-width: 1080px;
+		--sidebar-width: 220px;
+		--header-height: 56px;
+		--radius: 6px;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--bg: #121210;
+			--bg-raised: #1a1917;
+			--text: #ebe8e1;
+			--text-secondary: #b3aea3;
+			--muted: #7d796f;
+			--border: #2c2a26;
+			--accent: #fb923c;
+			--accent-soft: #2e1d10;
+			--avoid: #f97066;
+			--prefer: #47cd89;
+			--code-bg: #1a1917;
+		}
+
+		.astro-code,
+		.astro-code span {
+			color: var(--shiki-dark) !important;
+		}
+	}
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	html {
+		scroll-behavior: smooth;
+		scroll-padding-top: calc(var(--header-height) + 16px);
+		-webkit-text-size-adjust: 100%;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		html {
+			scroll-behavior: auto;
+		}
+	}
+
+	body {
+		margin: 0;
+		background: var(--bg);
+		color: var(--text);
+		font-family: var(--font-sans);
+		font-size: 1rem;
+		line-height: 1.6;
+	}
+
+	a {
+		color: inherit;
+		text-decoration-color: var(--muted);
+		text-underline-offset: 3px;
+	}
+
+	a:hover {
+		color: var(--accent);
+		text-decoration-color: currentColor;
+	}
+
+	code,
+	pre,
+	kbd {
+		font-family: var(--font-mono);
+	}
+
+	:not(pre) > code {
+		font-size: 0.875em;
+		padding: 0.1em 0.35em;
+		background: var(--code-bg);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+	}
+
+	[hidden] {
+		display: none !important;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		height: var(--header-height);
+		background: color-mix(in srgb, var(--bg) 88%, transparent);
+		backdrop-filter: blur(8px);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.site-header-inner {
+		max-width: var(--page-width);
+		height: 100%;
+		margin: 0 auto;
+		padding: 0 16px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+	}
+
+	.wordmark {
+		font-family: var(--font-mono);
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.wordmark span {
+		color: var(--accent);
+	}
+
+	.site-nav {
+		display: flex;
+		align-items: center;
+		gap: 20px;
+		font-size: 0.875rem;
+	}
+
+	.github-link {
+		display: inline-flex;
+	}
+
+	.site-nav a {
+		color: var(--text-secondary);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	@media (max-width: 480px) {
+		/* The hero has the same link; the header has no room for it on a phone. */
+		.site-nav a[href="/styleguide.md"] {
+			display: none;
+		}
+	}
+
+	.site-nav a:hover {
+		color: var(--accent);
+	}
+
+	.site-footer {
+		max-width: var(--page-width);
+		margin: 96px auto 0;
+		padding: 24px 16px 48px;
+		border-top: 1px solid var(--border);
+		color: var(--muted);
+		font-size: 0.875rem;
+	}
+
+	.site-footer p {
+		margin: 0;
+		max-width: 60ch;
+	}
+
+	.button {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 14px;
+		font: inherit;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text);
+		background: var(--bg-raised);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.button:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.button-primary {
+		color: var(--bg);
+		background: var(--text);
+		border-color: var(--text);
+	}
+
+	.button-primary:hover {
+		color: var(--bg);
+		background: var(--accent);
+		border-color: var(--accent);
+	}
+</style>
