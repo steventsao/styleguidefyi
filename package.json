@@ -8,11 +8,13 @@
 		"build": "astro build",
 		"preview": "astro preview",
 		"deploy": "astro build && wrangler deploy",
+		"deploy:preview": "astro build && wrangler deploy --config wrangler.preview.jsonc",
 		"typecheck": "astro check",
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"astro": "^6.0.1"
+		"astro": "^6.0.1",
+		"just-bash": "3.4.2"
 	},
 	"devDependencies": {
 		"@astrojs/check": "^0.9.7",

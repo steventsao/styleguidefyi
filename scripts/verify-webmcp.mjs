@@ -11,16 +11,22 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const url = process.argv[2] ?? "https://styleguide.fyi/";
+const url = process.argv[2] ?? "https://styleguidefyi-shell.steventsao.workers.dev/";
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const REGISTRATION_WAIT_MS = 1500;
 
-const SAMPLE_INPUTS = {
-	"list-sections": {},
-	"get-section": { section: "errors" },
-	"search-rules": { query: "swallow" },
-	"get-styleguide": {},
-};
+const CASES = [
+	{ label: "list virtual files", input: { command: "ls /guide && ls /guide/sections" }, exitCode: 0, includes: "errors.md" },
+	{ label: "read a section", input: { command: "cat sections/errors.md" }, exitCode: 0, includes: "### Never swallow an error." },
+	{ label: "search with glob and pipe", input: { command: "grep -l 'permission' rules/*.md | sort" }, exitCode: 0, includes: "rules/parse-at-the-boundary.md" },
+	{ label: "query the JSON index", input: { command: `jq '.sections[] | select(.id == "errors") | .rules[0].id' index.json` }, exitCode: 0, includes: "never-swallow" },
+	{ label: "reject missing command", input: {}, exitCode: 2, errorIncludes: "command" },
+	{ label: "reject writes", input: { command: "echo replaced > rules/never-swallow.md" }, exitCode: 1, errorIncludes: "read-only" },
+	{ label: "preserve guide after rejected write", input: { command: "head -1 rules/never-swallow.md" }, exitCode: 0, includes: "### Never swallow an error." },
+	{ label: "disable network commands", input: { command: "curl https://example.com" }, exitCode: 127 },
+	{ label: "bound an infinite loop", input: { command: "while :; do :; done" }, nonzero: true, errorIncludes: "limit" },
+	{ label: "recover after limit", input: { command: "pwd" }, exitCode: 0, includes: "/guide" },
+];
 
 const userDataDir = await mkdtemp(join(tmpdir(), "verify-webmcp-"));
 const chrome = spawn(CHROME, [
@@ -82,47 +88,36 @@ function waitForEvent(method) {
 }
 
 // Runs in the page.
-async function inspectPage(sampleInputs) {
+async function inspectPage(cases) {
 	const modelContext = document.modelContext ?? navigator.modelContext;
 	const entryPoint = document.modelContext ? "document.modelContext" : navigator.modelContext ? "navigator.modelContext" : null;
 	const pageStatus = document.querySelector("#webmcp-status")?.textContent ?? null;
 	if (!modelContext) return { entryPoint, pageStatus, tools: [], calls: [] };
 
 	const registered = await modelContext.getTools();
+	const tool = registered.find((candidate) => candidate.name === "exec");
 	const calls = [];
-	for (const tool of registered) {
+	if (tool) for (const test of cases) {
 		try {
-			const input = sampleInputs[tool.name] ?? {};
 			let result;
-			let inputFormat = "object";
 			try {
-				result = await modelContext.executeTool(tool, input);
+				result = await modelContext.executeTool(tool, test.input);
 			} catch (error) {
-				// The spec takes an object. Chrome builds before that change take a JSON string.
+				// Earlier Chrome builds expect JSON strings instead of objects.
 				if (!String(error).includes("parse input")) throw error;
-				inputFormat = "JSON string";
-				result = await modelContext.executeTool(tool, JSON.stringify(input));
+				result = await modelContext.executeTool(tool, JSON.stringify(test.input));
 			}
-			calls.push({ name: tool.name, ok: true, result, inputFormat });
+			if (typeof result === "string") result = JSON.parse(result);
+			const ok = typeof result.stdout === "string" && typeof result.stderr === "string" &&
+				(test.nonzero ? result.exitCode !== 0 : result.exitCode === test.exitCode) &&
+				(!test.includes || result.stdout.includes(test.includes)) &&
+				(!test.errorIncludes || result.stderr.toLowerCase().includes(test.errorIncludes));
+			calls.push({ label: test.label, ok, result });
 		} catch (error) {
-			calls.push({ name: tool.name, ok: false, error: String(error) });
+			calls.push({ label: test.label, ok: false, error: String(error) });
 		}
 	}
-
-	return {
-		entryPoint,
-		pageStatus,
-		tools: registered.map(({ name, title, description, inputSchema, annotations, origin }) => ({
-			name,
-			title,
-			description,
-			inputSchema,
-			annotations,
-			origin,
-		})),
-		calls,
-		filterAfterCalls: document.querySelector("#rule-filter")?.value ?? null,
-	};
+	return { entryPoint, pageStatus, tools: registered.map(({ name }) => name), calls };
 }
 
 let exitCode = 0;
@@ -139,7 +134,7 @@ try {
 	const evaluation = await send(
 		"Runtime.evaluate",
 		{
-			expression: `(${inspectPage})(${JSON.stringify(SAMPLE_INPUTS)})`,
+			expression: `(${inspectPage})(${JSON.stringify(CASES)})`,
 			awaitPromise: true,
 			returnByValue: true,
 		},
@@ -153,24 +148,16 @@ try {
 	console.log(`URL:         ${url}`);
 	console.log(`Entry point: ${report.entryPoint ?? "none (WebMCP is not exposed in this Chrome)"}`);
 	console.log(`Page status: ${report.pageStatus}`);
-	console.log(`Tools:       ${report.tools.map((tool) => tool.name).join(", ") || "none"}\n`);
-
+	console.log(`Tools:       ${report.tools.join(", ") || "none"}\n`);
 	for (const call of report.calls) {
-		const preview = call.ok ? String(call.result).slice(0, 300).replace(/\n/g, "\\n") : call.error;
-		const format = call.ok ? `  [input as ${call.inputFormat}]` : "";
-		console.log(`${call.ok ? "PASS" : "FAIL"}  ${call.name}(${JSON.stringify(SAMPLE_INPUTS[call.name] ?? {})})${format}`);
-		console.log(`      ${preview}${call.ok && String(call.result).length > 300 ? "…" : ""}\n`);
+		console.log(`${call.ok ? "PASS" : "FAIL"}  ${call.label}`);
+		console.log(`      ${JSON.stringify(call.result ?? call.error).slice(0, 350)}\n`);
 	}
-	if (report.calls.length > 0) console.log(`Filter box after the calls: ${JSON.stringify(report.filterAfterCalls)}`);
-
-	const expected = Object.keys(SAMPLE_INPUTS);
-	const missing = expected.filter((name) => !report.tools.some((tool) => tool.name === name));
-	const failed = report.calls.filter((call) => !call.ok);
-	if (missing.length > 0 || failed.length > 0) {
-		console.error(`\nFAILED. Missing tools: ${missing.join(", ") || "none"}. Failed calls: ${failed.map((call) => call.name).join(", ") || "none"}.`);
+	if (report.tools.length !== 1 || report.tools[0] !== "exec" || report.calls.length !== CASES.length || report.calls.some((call) => !call.ok)) {
+		console.error("FAILED. Expected exactly one exec tool and all shell checks to pass.");
 		exitCode = 1;
 	} else {
-		console.log("\nAll tools are registered and callable.");
+		console.log("One exec tool registered; all shell checks passed through WebMCP.");
 	}
 } catch (error) {
 	console.error(error);

@@ -4,7 +4,22 @@ A common coding style guide for people and agents to review and improve together
 
 - **Read it:** https://styleguide.fyi
 - **Markdown:** `curl -s https://styleguide.fyi/styleguide.md >> AGENTS.md`
-- **WebMCP:** the page registers four read-only tools (`list-sections`, `get-section`, `search-rules`, `get-styleguide`) on `document.modelContext`, so a browser agent can query the guide as functions.
+- **WebMCP shell preview:** this branch registers one read-only tool, `exec`, on `document.modelContext`. It accepts `{ "command": "ls /guide" }` and returns `{ stdout, stderr, exitCode }`.
+
+## Shell preview
+
+The preview uses Just Bash in a browser Web Worker. The virtual files are generated from `src/data/styleguide.ts`: `/guide/styleguide.md`, `/guide/index.json`, `/guide/sections/*.md`, and `/guide/rules/*.md`. Start with `cat /guide/README.md`.
+
+Each call starts a fresh shell in `/guide`. An adapter rejects all filesystem writes, including redirections and in-place edits. Only selected text/query commands are registered; network and external runtimes are disabled. The page does not persist command history or add command telemetry. Tool results are returned to the calling agent.
+
+The shell accepts up to 4096 characters, with a 3-second execution deadline, a 64 KiB output limit and a separate 10-second worker deadline that includes loading. The worker is terminated after each call. Just Bash's browser package is loaded on first execution; version 3.4.2 still imports `node:zlib`, so the browser build maps that import to an explicit unsupported-compression adapter. The virtual guide contains only plain text.
+
+```bash
+pnpm deploy:preview
+node scripts/verify-webmcp.mjs https://styleguidefyi-shell.steventsao.workers.dev/
+```
+
+`wrangler.preview.jsonc` deploys a separate `styleguidefyi-shell` Worker with a workers.dev address and no custom-domain routes. `pnpm run deploy` still targets production, so use `deploy:preview` for this experiment.
 
 ## Contributing
 
@@ -26,8 +41,8 @@ Static [Astro](https://astro.build) site, served by Cloudflare Workers static as
 ```bash
 pnpm install
 pnpm test
-pnpm run deploy
-node scripts/verify-webmcp.mjs   # calls every WebMCP tool on the live site through real Chrome
+pnpm deploy:preview
+node scripts/verify-webmcp.mjs <preview-url>   # exercises exec through real Chrome
 ```
 
 To try the tools in your own Chrome (149+): enable `chrome://flags/#enable-webmcp-testing`, then open the site with the Model Context Tool Inspector extension.
