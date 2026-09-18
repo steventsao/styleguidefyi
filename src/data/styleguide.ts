@@ -327,7 +327,7 @@ if (Date.now() - session.createdAt > SESSION_TTL_MS) expire(session);`,
 		{
 			id: "concurrency",
 			title: "Concurrency and retries",
-			summary: "A call across a boundary can hang, fail, or succeed without telling you. Write for all three.",
+			summary: "",
 			rules: [
 				{
 					id: "bound-every-wait",
