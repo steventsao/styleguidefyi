@@ -5,7 +5,7 @@
       "command": "ls /guide && ls /guide/sections"
     },
     "expected": {
-      "stdout": "README.md\nindex.json\nrules\nsections\nstyleguide.md\nagents.md\ncomments.md\ncommits.md\nconcurrency.md\nerrors.md\nfunctions.md\nnaming.md\nread-first.md\nscope.md\nstructure.md\ntests.md\ntypes-and-data.md\n",
+      "stdout": "README.md\nconsensus.json\nindex.json\nrules\nsections\nstyleguide.md\nagents.md\ncomments.md\ncommits.md\nconcurrency.md\nerrors.md\nfunctions.md\nnaming.md\nread-first.md\nscope.md\nstructure.md\ntests.md\ntypes-and-data.md\n",
       "stderr": "",
       "exitCode": 0
     },
@@ -140,5 +140,41 @@
       "exitCode": 0
     },
     "tool": "exec"
+  },
+  {
+    "label": "read Astra disagreement",
+    "tool": "exec",
+    "input": {
+      "command": "jq -r '.rules[] | select(.id == \"todo-with-owner\") | .reviews.astra.rating' consensus.json"
+    },
+    "expected": {
+      "stdout": "somewhat-disagree\n",
+      "stderr": "",
+      "exitCode": 0
+    }
+  },
+  {
+    "label": "keep Fable unrated",
+    "tool": "exec",
+    "input": {
+      "command": "jq '[.rules[] | select(.reviews.fable != null)] | length' consensus.json"
+    },
+    "expected": {
+      "stdout": "0\n",
+      "stderr": "",
+      "exitCode": 0
+    }
+  },
+  {
+    "label": "all Astra assessments match current wording",
+    "tool": "exec",
+    "input": {
+      "command": "jq '[.rules[] | select(.reviews.astra.status == \"current\")] | length' consensus.json"
+    },
+    "expected": {
+      "stdout": "59\n",
+      "stderr": "",
+      "exitCode": 0
+    }
   }
 ]

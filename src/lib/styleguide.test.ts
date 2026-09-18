@@ -23,7 +23,7 @@ describe("styleguide data", () => {
 	test("ids do not collide with the anchors the page itself uses", () => {
 		const ids = styleguide.sections.flatMap((section) => [section.id, ...section.rules.map((rule) => rule.id)]);
 
-		for (const reserved of ["rules", "webmcp"]) expect(ids).not.toContain(reserved);
+		for (const reserved of ["rules", "consensus", "webmcp"]) expect(ids).not.toContain(reserved);
 	});
 
 	test("every source has a title, an author or publisher, and an https URL", () => {

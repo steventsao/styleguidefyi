@@ -36,6 +36,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 				<a href="/" class="wordmark">styleguide<span>.fyi</span></a>
 				<nav class="site-nav" aria-label="Main">
 					<a href="/#rules">Rules</a>
+					<a href="/#consensus">Consensus</a>
 					<a href="/#webmcp">For agents</a>
 					<a href="/styleguide.md">styleguide.md</a>
 					<a class="github-link" href={GITHUB_URL} aria-label="Source code on GitHub">
@@ -207,11 +208,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		white-space: nowrap;
 	}
 
-	@media (max-width: 480px) {
-		/* The hero has the same link; the header has no room for it on a phone. */
-		.site-nav a[href="/styleguide.md"] {
+	@media (max-width: 640px) {
+		/* These links are also in the hero; keep the narrow header readable. */
+		.site-nav a[href="/styleguide.md"],
+		.site-nav a[href="/#webmcp"] {
 			display: none;
 		}
+		.site-nav { gap: 12px; }
+	}
+
+	@media (max-width: 360px) {
+		.wordmark { font-size: 0.875rem; }
 	}
 
 	.site-nav a:hover {

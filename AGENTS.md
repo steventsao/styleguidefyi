@@ -18,18 +18,22 @@ There is no git-triggered deploy. `pnpm run deploy` is the only way to productio
 | ---------------------------- | ----------------------------------------------------------------------------------------- |
 | `src/data/styleguide.ts`     | The guide: sections and rules. The single source for the page, `/styleguide.md`, and the tools |
 | `src/lib/styleguide.ts`      | Markdown output and rule search                                                           |
+| `src/lib/consensus.ts`      | Agreement labels, review validity and JSON output |
+| `src/components/ConsensusTable.astro` | Astra/Fable table, expandable rationales and filters |
 | `src/lib/webmcp-tools.ts`    | Four guide tools plus `exec`. Page actions and shell execution are injected             |
 | `src/lib/guide-shell.ts`   | Just Bash runtime with a read-only virtual filesystem and execution limits |
 | `src/scripts/shell-client.ts` | Creates a browser worker on demand and enforces its lifetime |
 | `src/scripts/page.ts`        | Browser script: registers the tools, runs the filter, the Run buttons and the copy button |
 | `src/pages/index.astro`      | The page                                                                                  |
 | `src/pages/styleguide.md.ts` | Static endpoint for the markdown version                                                  |
-| `public/_headers`            | CORS and charset for `/styleguide.md`                                                     |
+| `src/pages/consensus.json.ts` | Static endpoint for reviewer assessments |
+| `public/_headers`            | CORS and charset for the markdown and consensus endpoints |
 | `scripts/fixtures/exec-cases.json` | Reviewed `exec` results; `guide-tool-cases.json` preserves the four original tools. Both feed unit/live checks |
 
 ## Rules
 
 - To change the guide, edit `src/data/styleguide.ts` only. Rule ids are public URL anchors and WebMCP lookup keys: do not rename them.
+- Reviewers fill only their own `reviews` entry. `null` means Not rated, never Neutral. Record the current `ruleFingerprint(rule)` as `reviewedHash` only after assessing the wording; do not refresh other reviewers' hashes after editing a rule. Stale assessments must remain Needs review until reassessed.
 - WebMCP entry point is `document.modelContext` (current spec, Chrome 149+). `navigator.modelContext` is the old one; the page falls back to it.
 - WebMCP drops the reason of a rejected `execute` promise. Return problems the agent can correct as `{ error }` values; do not throw.
 - Tool results must survive `JSON.stringify`.

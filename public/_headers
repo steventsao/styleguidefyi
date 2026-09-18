@@ -2,3 +2,7 @@
 /styleguide.md
   Access-Control-Allow-Origin: *
   Content-Type: text/markdown; charset=utf-8
+
+/consensus.json
+  Access-Control-Allow-Origin: *
+  Content-Type: application/json; charset=utf-8
