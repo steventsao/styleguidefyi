@@ -29,15 +29,12 @@ export const styleguide: Styleguide = {
 	title: "A Common Coding Style Guide",
 	url: "https://styleguide.fyi",
 	updated: "2026-09-17",
-	intro:
-		"A shared guide for people and coding agents, working toward consensus through contributions and review. " +
-		"These are language-agnostic defaults, with TypeScript examples. Follow the codebase's style conventions, " +
-		"and judge each rule against the task's requirements. Propose changes with reasons and concrete examples.",
+	intro: "",
 	sections: [
 		{
 			id: "read-first",
 			title: "Read before you write",
-			summary: "Most bad code comes from not knowing what is already there.",
+			summary: "",
 			rules: [
 				{
 					id: "match-the-codebase",
@@ -64,7 +61,7 @@ export const styleguide: Styleguide = {
 		{
 			id: "scope",
 			title: "Keep the change small",
-			summary: "A diff is a cost the reviewer pays. Spend it on the task.",
+			summary: "",
 			rules: [
 				{
 					id: "smallest-diff",
@@ -100,7 +97,7 @@ function emailRecipient(user: User) { /* ... */ }`,
 		{
 			id: "naming",
 			title: "Naming",
-			summary: "A good name removes the need for a comment. A bad one needs a comment nobody will write.",
+			summary: "",
 			rules: [
 				{
 					id: "name-what-it-is",
@@ -142,7 +139,7 @@ const maxUploadBytes = 5 * 1024 * 1024;`,
 		{
 			id: "functions",
 			title: "Functions",
-			summary: "Short, honest, and boring to call.",
+			summary: "",
 			rules: [
 				{
 					id: "one-job",
@@ -212,7 +209,7 @@ async function applyDiscount(orderId: string) {
 		{
 			id: "types-and-data",
 			title: "Types and data",
-			summary: "Let the compiler carry the facts, so that people do not have to.",
+			summary: "",
 			rules: [
 				{
 					id: "parse-at-the-boundary",
@@ -265,7 +262,7 @@ if (Date.now() - session.createdAt > SESSION_TTL_MS) expire(session);`,
 		{
 			id: "errors",
 			title: "Errors",
-			summary: "An error you hide today is an incident you debug blind next month.",
+			summary: "",
 			rules: [
 				{
 					id: "never-swallow",
@@ -320,7 +317,7 @@ if (Date.now() - session.createdAt > SESSION_TTL_MS) expire(session);`,
 		{
 			id: "comments",
 			title: "Comments",
-			summary: "The code says what. The comment is for what the code cannot say.",
+			summary: "",
 			rules: [
 				{
 					id: "comment-why",
@@ -351,7 +348,7 @@ retries += 1;`,
 		{
 			id: "tests",
 			title: "Tests",
-			summary: "A test is worth what it catches, minus what it costs to keep green.",
+			summary: "",
 			rules: [
 				{
 					id: "test-behavior",
@@ -390,7 +387,7 @@ retries += 1;`,
 		{
 			id: "structure",
 			title: "Dependencies and structure",
-			summary: "Every import is a promise to keep something working.",
+			summary: "",
 			rules: [
 				{
 					id: "justify-dependencies",
@@ -420,7 +417,7 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY);`,
 		{
 			id: "commits",
 			title: "Commits and reviews",
-			summary: "History is documentation that cannot go stale. Write it on purpose.",
+			summary: "",
 			rules: [
 				{
 					id: "atomic-commits",
@@ -453,7 +450,7 @@ deploys. One retry with a 2 s delay covers it, so we stop paging on-call.`,
 		{
 			id: "agents",
 			title: "Working with coding agents",
-			summary: "Shared expectations for any agent that touches your code.",
+			summary: "",
 			rules: [
 				{
 					id: "verify-before-done",

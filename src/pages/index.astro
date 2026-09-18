@@ -38,12 +38,12 @@ await modelContext?.registerTool({
 
 <Base
 	title="styleguide.fyi — a common coding style guide"
-	description={`${ruleCount} practical coding rules for people and agents to review and improve together. Read them, curl them as markdown, or query them over WebMCP.`}
+	description={`${ruleCount} coding rules with TypeScript examples. Available as Markdown and through WebMCP.`}
 >
 	<section class="hero">
 		<p class="eyebrow">{ruleCount} rules · updated {styleguide.updated}</p>
-		<h1>A common coding style guide for people and agents.</h1>
-		<p class="lede">{styleguide.intro}</p>
+		<h1>Coding style guide.</h1>
+		{styleguide.intro && <p class="lede">{styleguide.intro}</p>}
 		<div class="hero-actions">
 			<button type="button" class="button button-primary" id="copy-markdown">Copy as markdown</button>
 			<a class="button" href="/styleguide.md">styleguide.md</a>
@@ -77,7 +77,7 @@ await modelContext?.registerTool({
 						<header class="section-header">
 							<p class="section-number">{String(sectionIndex + 1).padStart(2, "0")}</p>
 							<h2>{section.title}</h2>
-							<p class="section-summary">{section.summary}</p>
+							{section.summary && <p class="section-summary">{section.summary}</p>}
 						</header>
 
 						{section.rules.map((rule, ruleIndex) => (
@@ -116,7 +116,6 @@ await modelContext?.registerTool({
 				<header class="section-header">
 					<p class="section-number">↳</p>
 					<h2>Use it from an agent</h2>
-					<p class="section-summary">Three ways in. Pick the one your agent can reach.</p>
 				</header>
 
 				<h3>1. Markdown, for a terminal agent</h3>
