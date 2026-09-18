@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { styleguide } from "../data/styleguide";
-import { countRules, searchRules, styleguideToMarkdown } from "./styleguide";
+import { countRules, ruleToMarkdown, searchRules, styleguideToMarkdown } from "./styleguide";
 import { createTools, type PageActions } from "./webmcp-tools";
 
 function setup() {
@@ -23,6 +23,17 @@ describe("styleguide data", () => {
 		const ids = styleguide.sections.flatMap((section) => [section.id, ...section.rules.map((rule) => rule.id)]);
 
 		for (const reserved of ["rules", "webmcp"]) expect(ids).not.toContain(reserved);
+	});
+
+	test("every source has a title, an author or publisher, and an https URL", () => {
+		const references = styleguide.sections.flatMap((section) => section.rules.flatMap((rule) => rule.references ?? []));
+
+		expect(references.length).toBeGreaterThan(0);
+		for (const reference of references) {
+			expect(reference.title).not.toBe("");
+			expect(reference.by).not.toBe("");
+			expect(reference.url).toMatch(/^https:\/\/[^\s]+$/);
+		}
 	});
 });
 
@@ -53,6 +64,13 @@ describe("styleguideToMarkdown", () => {
 			for (const rule of section.rules) expect(markdown).toContain(`### ${rule.title}`);
 		}
 		expect(markdown).toContain("```ts\n");
+	});
+
+	test("lists the sources of a rule that cites them", () => {
+		const rule = styleguide.sections.flatMap((section) => section.rules).find((candidate) => candidate.references)!;
+		const [reference] = rule.references!;
+
+		expect(ruleToMarkdown(rule)).toContain(`Sources:\n\n- [${reference.title}](${reference.url}) (${reference.by})`);
 	});
 });
 

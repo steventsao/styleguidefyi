@@ -1,4 +1,4 @@
-import type { Rule, Section, Styleguide } from "../data/styleguide";
+import type { Reference, Rule, Section, Styleguide } from "../data/styleguide";
 
 export interface RuleMatch {
 	id: string;
@@ -14,11 +14,17 @@ function codeBlock(label: string, code: string, lang: string): string {
 	return `${label}:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
 }
 
+function sourceList(references: readonly Reference[]): string {
+	const items = references.map((reference) => `- [${reference.title}](${reference.url}) (${reference.by})`);
+	return `Sources:\n\n${items.join("\n")}`;
+}
+
 export function ruleToMarkdown(rule: Rule): string {
 	const lang = rule.lang ?? DEFAULT_LANG;
 	const parts = [`### ${rule.title}`, rule.why];
 	if (rule.avoid) parts.push(codeBlock("Avoid", rule.avoid, lang));
 	if (rule.prefer) parts.push(codeBlock("Prefer", rule.prefer, lang));
+	if (rule.references?.length) parts.push(sourceList(rule.references));
 	return parts.join("\n\n");
 }
 
