@@ -9,6 +9,7 @@ data.db*
 images/
 scripts/images.sql
 .playwright-mcp
+.webmcp-results/
 
 # Local research data and backups. Never publish.
 scratch/

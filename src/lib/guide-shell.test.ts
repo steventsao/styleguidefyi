@@ -5,6 +5,7 @@ import { runGuideShell } from "./guide-shell";
 import { MAX_COMMAND_LENGTH, MAX_OUTPUT_BYTES } from "./shell-protocol";
 import { countRules, styleguideToMarkdown } from "./styleguide";
 import { createShellTool } from "./webmcp-tools";
+import cases from "../../scripts/fixtures/exec-cases.json";
 
 describe("guide shell", () => {
 	test("every index path resolves to the published guide content", () => {
@@ -69,6 +70,11 @@ describe("guide shell", () => {
 });
 
 describe("exec WebMCP tool", () => {
+	test.each(cases)("matches the reviewed result: $label", async ({ input, expected }) => {
+		const actual = await createShellTool(runGuideShell).execute(input);
+		expect(actual).toStrictEqual(expected);
+	});
+
 	test("returns only a serializable shell result", async () => {
 		const tool = createShellTool(runGuideShell);
 		expect(tool.name).toBe("exec");

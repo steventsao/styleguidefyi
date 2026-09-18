@@ -2,31 +2,27 @@
 // starts headless Chrome with WebMCP enabled, lists the tools with `document.modelContext.getTools()`
 // and calls each one with `executeTool()`, the way an agent does.
 //
-//   node scripts/verify-webmcp.mjs [url]
+//   node scripts/verify-webmcp.mjs [url] [--output path/to/results.json]
 //
 // Needs Node 22+ (global WebSocket) and Google Chrome 149+.
 
 import { spawn } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { parseArgs } from "node:util";
+import { assertWebMcpReport } from "./webmcp-results.mjs";
 
-const url = process.argv[2] ?? "https://styleguidefyi-shell.steventsao.workers.dev/";
+const { values, positionals } = parseArgs({
+	options: { output: { type: "string", default: ".webmcp-results/latest.json" } },
+	allowPositionals: true,
+});
+if (positionals.length > 1) throw new Error("Usage: node scripts/verify-webmcp.mjs [url] [--output path]");
+const url = positionals[0] ?? "https://styleguidefyi-shell.steventsao.workers.dev/";
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const REGISTRATION_WAIT_MS = 1500;
 
-const CASES = [
-	{ label: "list virtual files", input: { command: "ls /guide && ls /guide/sections" }, exitCode: 0, includes: "errors.md" },
-	{ label: "read a section", input: { command: "cat sections/errors.md" }, exitCode: 0, includes: "### Never swallow an error." },
-	{ label: "search with glob and pipe", input: { command: "grep -l 'permission' rules/*.md | sort" }, exitCode: 0, includes: "rules/parse-at-the-boundary.md" },
-	{ label: "query the JSON index", input: { command: `jq '.sections[] | select(.id == "errors") | .rules[0].id' index.json` }, exitCode: 0, includes: "never-swallow" },
-	{ label: "reject missing command", input: {}, exitCode: 2, errorIncludes: "command" },
-	{ label: "reject writes", input: { command: "echo replaced > rules/never-swallow.md" }, exitCode: 1, errorIncludes: "read-only" },
-	{ label: "preserve guide after rejected write", input: { command: "head -1 rules/never-swallow.md" }, exitCode: 0, includes: "### Never swallow an error." },
-	{ label: "disable network commands", input: { command: "curl https://example.com" }, exitCode: 127 },
-	{ label: "bound an infinite loop", input: { command: "while :; do :; done" }, nonzero: true, errorIncludes: "limit" },
-	{ label: "recover after limit", input: { command: "pwd" }, exitCode: 0, includes: "/guide" },
-];
+const CASES = JSON.parse(await readFile(new URL("./fixtures/exec-cases.json", import.meta.url), "utf8"));
 
 const userDataDir = await mkdtemp(join(tmpdir(), "verify-webmcp-"));
 const chrome = spawn(CHROME, [
@@ -108,13 +104,9 @@ async function inspectPage(cases) {
 				result = await modelContext.executeTool(tool, JSON.stringify(test.input));
 			}
 			if (typeof result === "string") result = JSON.parse(result);
-			const ok = typeof result.stdout === "string" && typeof result.stderr === "string" &&
-				(test.nonzero ? result.exitCode !== 0 : result.exitCode === test.exitCode) &&
-				(!test.includes || result.stdout.includes(test.includes)) &&
-				(!test.errorIncludes || result.stderr.toLowerCase().includes(test.errorIncludes));
-			calls.push({ label: test.label, ok, result });
+			calls.push({ label: test.label, input: test.input, result });
 		} catch (error) {
-			calls.push({ label: test.label, ok: false, error: String(error) });
+			calls.push({ label: test.label, input: test.input, error: String(error) });
 		}
 	}
 	return { entryPoint, pageStatus, tools: registered.map(({ name }) => name), calls };
@@ -134,7 +126,7 @@ try {
 	const evaluation = await send(
 		"Runtime.evaluate",
 		{
-			expression: `(${inspectPage})(${JSON.stringify(CASES)})`,
+			expression: `(${inspectPage})(${JSON.stringify(CASES.map(({ label, input }) => ({ label, input })))})`,
 			awaitPromise: true,
 			returnByValue: true,
 		},
@@ -145,20 +137,17 @@ try {
 	}
 
 	const report = evaluation.result.value;
+	// Save full responses even when assertions fail. Expectations stay in a separate file.
+	await mkdir(dirname(values.output), { recursive: true });
+	await writeFile(values.output, JSON.stringify({ url, ...report }, null, 2) + "\n");
 	console.log(`URL:         ${url}`);
+	console.log(`Captured:    ${values.output}`);
 	console.log(`Entry point: ${report.entryPoint ?? "none (WebMCP is not exposed in this Chrome)"}`);
 	console.log(`Page status: ${report.pageStatus}`);
 	console.log(`Tools:       ${report.tools.join(", ") || "none"}\n`);
-	for (const call of report.calls) {
-		console.log(`${call.ok ? "PASS" : "FAIL"}  ${call.label}`);
-		console.log(`      ${JSON.stringify(call.result ?? call.error).slice(0, 350)}\n`);
-	}
-	if (report.tools.length !== 1 || report.tools[0] !== "exec" || report.calls.length !== CASES.length || report.calls.some((call) => !call.ok)) {
-		console.error("FAILED. Expected exactly one exec tool and all shell checks to pass.");
-		exitCode = 1;
-	} else {
-		console.log("One exec tool registered; all shell checks passed through WebMCP.");
-	}
+	assertWebMcpReport(report, CASES);
+	for (const call of report.calls) console.log(`PASS  ${call.label} (exact result)`);
+	console.log(`\nOne exec tool registered; all ${CASES.length} captured results match the reviewed fixtures.`);
 } catch (error) {
 	console.error(error);
 	exitCode = 1;

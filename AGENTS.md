@@ -25,6 +25,7 @@ There is no git-triggered deploy. `pnpm run deploy` is the only way to productio
 | `src/pages/index.astro`      | The page                                                                                  |
 | `src/pages/styleguide.md.ts` | Static endpoint for the markdown version                                                  |
 | `public/_headers`            | CORS and charset for `/styleguide.md`                                                     |
+| `scripts/fixtures/exec-cases.json` | Reviewed complete `exec` inputs/results, shared by unit tests and live WebMCP checks |
 
 ## Rules
 
@@ -33,3 +34,4 @@ There is no git-triggered deploy. `pnpm run deploy` is the only way to productio
 - WebMCP drops the reason of a rejected `execute` promise. Return problems the agent can correct as `{ error }` values; do not throw.
 - Tool results must survive `JSON.stringify`.
 - After a change to the tools, deploy and run `node scripts/verify-webmcp.mjs`.
+- The live verifier captures full responses in gitignored `.webmcp-results/latest.json` and compares them with reviewed fixtures. Do not update expectations just to make a failing check pass.

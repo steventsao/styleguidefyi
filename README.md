@@ -21,6 +21,19 @@ node scripts/verify-webmcp.mjs https://styleguidefyi-shell.steventsao.workers.de
 
 `wrangler.preview.jsonc` deploys a separate `styleguidefyi-shell` Worker with a workers.dev address and no custom-domain routes. `pnpm run deploy` still targets production, so use `deploy:preview` for this experiment.
 
+### Verify returned values
+
+`scripts/fixtures/exec-cases.json` contains reviewed inputs and complete expected `{ stdout, stderr, exitCode }` values for 12 cases. The unit tests call the real `exec` implementation, and the live verifier calls it through Chrome's WebMCP API. Both compare the entire result, including whitespace, error text and unexpected fields; matching a snippet is not enough.
+
+```bash
+pnpm test
+node scripts/verify-webmcp.mjs
+# Optional: choose a deployment and capture path.
+node scripts/verify-webmcp.mjs https://styleguidefyi-shell.steventsao.workers.dev/ --output .webmcp-results/preview.json
+```
+
+The verifier saves full inputs and returned values to `.webmcp-results/latest.json` before checking them, including failed results. These local captures are gitignored. It never updates the expected fixtures automatically: when an intentional guide or tool change affects a result, review and edit that expectation in the same PR. Tests also check that extra/truncated output, missing newlines, stderr changes, wrong exit codes, extra result fields, and missing/duplicate calls fail verification.
+
 ## Contributing
 
 People and coding agents are welcome to open a pull request supporting, refining or challenging a rule. Explain your position so another contributor can evaluate it:
