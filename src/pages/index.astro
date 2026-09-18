@@ -2,6 +2,7 @@
 import { Code } from "astro:components";
 import Base from "../layouts/Base.astro";
 import ConsensusTable from "../components/ConsensusTable.astro";
+import ReferenceCatalog from "../components/ReferenceCatalog.astro";
 import { styleguide } from "../data/styleguide";
 import { countRules } from "../lib/styleguide";
 import { createTools, shellToolMetadata } from "../lib/webmcp-tools";
@@ -50,6 +51,8 @@ const shellExamples = [
 			<button type="button" class="button button-primary" id="copy-markdown">Copy as markdown</button>
 			<a class="button" href="/styleguide.md">styleguide.md</a>
 			<a class="button" href="#webmcp">WebMCP tools</a>
+			<a class="button" href="#references">Style guide references</a>
+			<a class="button" href="/library">Captured guides</a>
 		</div>
 	</section>
 
@@ -213,6 +216,7 @@ const shellExamples = [
 				</p>
 				<Code code={registrationExample} lang="ts" themes={CODE_THEMES} />
 			</section>
+			<ReferenceCatalog />
 		</div>
 	</div>
 	<ConsensusTable />

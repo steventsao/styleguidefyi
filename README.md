@@ -5,6 +5,7 @@ A common coding style guide for people and agents to review and improve together
 - **Read it:** https://styleguide.fyi
 - **Markdown:** `curl -s https://styleguide.fyi/styleguide.md >> AGENTS.md`
 - **Agreement table:** one row per rule, with independent Astra and Fable assessments; available at `/#consensus` and `/consensus.json`.
+- **Reference catalog:** `/#references`, `/references.md` and `/references.json` explain the scope, application, checks and limits of public style guides and engineering references.
 - **WebMCP:** the page registers five read-only tools on `document.modelContext`: `list-sections`, `get-section`, `search-rules`, `get-styleguide`, and `exec`. The first four provide direct guide queries. `exec` accepts `{ "command": "ls /guide" }` and returns `{ stdout, stderr, exitCode }` for custom shell queries.
 
 ## Shell tool
@@ -51,6 +52,16 @@ Assessments live alongside each rule in `src/data/styleguide.ts`. Each reviewer 
 
 The same data is available at `/consensus.json` and through `exec` at `/guide/consensus.json`. Missing reviews remain `null`; existing reviews include a `current` or `outdated` status. The rule markdown stays suitable for copying into `AGENTS.md` without the review discussion.
 
+## Reference catalog
+
+Full-text captures are available at `/library`, with a machine-readable index at `/mirrors.json`. Routes use `/org/repository/document`, with `/google/typescript` as a short alias. Each capture has `.source.txt` and `.capture.json` companions. See [capture and refresh instructions](content/mirrors/README.md) for provenance, licenses and how to add sources.
+
+The catalog in `src/data/references.ts` is research material, separate from the adopted rules and reviewer assessments. The page and both reference endpoints use that source. The existing rule Markdown and five WebMCP tools continue to expose the guide; the catalog is available through the separate HTTP endpoints.
+
+Entries distinguish sources already cited by this project from references suggested for reading. Related rule links show topic overlap, not historical influence. A citation or a reviewer rating is not proof that Codex or Fable automatically follows an external guide. The catalog documents Codex's public instruction mechanism and limits Fable claims to this repository's public review evidence.
+
+For additions, read the primary source, record the check date, explain how someone would apply and verify the advice, and include scope limits or conflicts. Use original summaries and public links. Keep private instructions, local paths, credentials and session transcripts out of catalog data. Cataloging a source does not adopt its conventions or install its tools.
+
 ## Contributing
 
 People and coding agents are welcome to open a pull request supporting, refining or challenging a rule. Explain your position so another contributor can evaluate it:
@@ -69,6 +80,8 @@ Static [Astro](https://astro.build) site, served by Cloudflare Workers static as
 
 ## Commands
 
+Use Node 24 and pnpm 10.34.5 (pinned in `package.json`).
+
 ```bash
 pnpm install
 pnpm test
@@ -77,3 +90,13 @@ node scripts/verify-webmcp.mjs   # checks all five tools on production through r
 ```
 
 To try the tools in your own Chrome (149+): enable `chrome://flags/#enable-webmcp-testing`, then open the site with the Model Context Tool Inspector extension.
+
+## Continuous integration and deployment
+
+[Check and deploy](.github/workflows/ci-deploy.yml) runs on pull requests targeting `main`, every push to `main`, and manual dispatch. PR checks install the frozen lockfile, run unit tests and typecheck, build the static site, and verify its HTTP routes through the local Cloudflare runtime. Deployment credentials are used only by the separate production job on `main`.
+
+After the checks pass on `main`, the workflow deploys the exact verified `dist/` artifact with Wrangler, then checks production against the built guide/catalog data, captured-source and license hashes, canonical URLs, download headers, section links and 404 behavior. `/deployment.json` reports the deployed commit and build time with `Cache-Control: no-store`; the production check must match the workflow's commit. Main runs are serialized and PR checks can cancel superseded PR runs. Actions are pinned to full commit hashes.
+
+The repository needs an Actions secret named `CLOUDFLARE_API_TOKEN` and an Actions variable named `CLOUDFLARE_ACCOUNT_ID`. Use a dedicated [Cloudflare Workers deployment token](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) scoped to the deployment account and applicable zone; never commit its value or use an interactive OAuth login token in CI. Missing credentials cause an explicit failed deployment. The `production` GitHub environment records deployments.
+
+Validate a preview before merging with `pnpm deploy:preview`. To verify an existing build against a deployment, run `pnpm verify:site https://styleguide.fyi --commit <full-sha>`. The existing Chrome WebMCP verifier remains required after tool changes; the HTTP check does not replace browser tool execution.

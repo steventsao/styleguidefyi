@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "collections": [
+    {
+      "id": "google/styleguide",
+      "title": "Google style guides",
+      "author": "Google and contributors",
+      "license": {
+        "label": "CC BY 3.0",
+        "path": "LICENSE",
+        "url": "https://creativecommons.org/licenses/by/3.0/",
+        "contains": "Attribution 3.0 Unported"
+      },
+      "documents": [
+        {
+          "id": "google-typescript",
+          "slug": "typescript",
+          "title": "Google TypeScript Style Guide",
+          "path": "tsguide.html",
+          "format": "html",
+          "selector": "#content",
+          "url": "https://google.github.io/styleguide/tsguide.html",
+          "aliases": [
+            "google/typescript"
+          ],
+          "catalogId": "google-typescript"
+        }
+      ]
+    },
+    {
+      "id": "google/eng-practices",
+      "title": "Google Engineering Practices",
+      "author": "Google and contributors",
+      "license": {
+        "label": "CC BY 3.0",
+        "path": "LICENSE",
+        "url": "https://creativecommons.org/licenses/by/3.0/",
+        "contains": "Attribution 3.0 Unported"
+      },
+      "documents": [
+        {
+          "id": "google-code-review",
+          "slug": "code-review",
+          "title": "What to look for in a code review",
+          "path": "review/reviewer/looking-for.md",
+          "format": "markdown",
+          "url": "https://google.github.io/eng-practices/review/reviewer/looking-for.html",
+          "catalogId": "google-code-review"
+        }
+      ]
+    },
+    {
+      "id": "airbnb/javascript",
+      "title": "Airbnb JavaScript Style Guide",
+      "author": "Airbnb and contributors",
+      "license": {
+        "label": "MIT",
+        "path": "LICENSE.md",
+        "url": "https://github.com/airbnb/javascript/blob/master/LICENSE.md",
+        "contains": "Permission is hereby granted"
+      },
+      "documents": [
+        {
+          "id": "airbnb-javascript",
+          "slug": "",
+          "title": "Airbnb JavaScript Style Guide",
+          "path": "README.md",
+          "format": "markdown",
+          "url": "https://github.com/airbnb/javascript",
+          "catalogId": "airbnb-javascript"
+        }
+      ]
+    },
+    {
+      "id": "prettier/prettier",
+      "title": "Prettier formatting guidance",
+      "author": "James Long and Prettier contributors",
+      "license": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "url": "https://github.com/prettier/prettier/blob/main/LICENSE",
+        "contains": "Permission is hereby granted"
+      },
+      "documents": [
+        {
+          "id": "prettier-rationale",
+          "slug": "rationale",
+          "title": "Prettier: Rationale",
+          "path": "docs/rationale.md",
+          "format": "markdown",
+          "url": "https://prettier.io/docs/rationale.html",
+          "catalogId": "prettier"
+        },
+        {
+          "id": "prettier-linters",
+          "slug": "linters",
+          "title": "Prettier vs. Linters",
+          "path": "docs/comparison.md",
+          "format": "markdown",
+          "url": "https://prettier.io/docs/comparison"
+        }
+      ]
+    },
+    {
+      "id": "python/peps",
+      "title": "Python Enhancement Proposals",
+      "author": "Guido van Rossum, Barry Warsaw and Alyssa Coghlan",
+      "license": {
+        "label": "Public domain",
+        "path": "peps/pep-0008.rst",
+        "url": "https://peps.python.org/pep-0008/#copyright",
+        "contains": "This document has been placed in the public domain.",
+        "notice": "This document has been placed in the public domain."
+      },
+      "documents": [
+        {
+          "id": "pep-8",
+          "slug": "pep-8",
+          "title": "PEP 8 — Style Guide for Python Code",
+          "path": "peps/pep-0008.rst",
+          "format": "html",
+          "capture": "web",
+          "selector": "#pep-content",
+          "url": "https://peps.python.org/pep-0008/",
+          "catalogId": "pep-8"
+        }
+      ]
+    },
+    {
+      "id": "golang/website",
+      "title": "Go language guidance",
+      "author": "The Go Authors",
+      "license": {
+        "label": "BSD 3-Clause",
+        "path": "LICENSE",
+        "url": "https://github.com/golang/website/blob/master/LICENSE",
+        "contains": "Redistribution and use"
+      },
+      "documents": [
+        {
+          "id": "effective-go",
+          "slug": "effective-go",
+          "title": "Effective Go",
+          "path": "_content/doc/effective_go.html",
+          "format": "html",
+          "capture": "web",
+          "selector": "article.Doc",
+          "url": "https://go.dev/doc/effective_go",
+          "catalogId": "effective-go"
+        }
+      ]
+    },
+    {
+      "id": "rust-lang/rust",
+      "title": "The Rust Style Guide",
+      "author": "The Rust Project Developers",
+      "license": {
+        "label": "MIT",
+        "path": "LICENSE-MIT",
+        "url": "https://github.com/rust-lang/rust/blob/main/LICENSE-MIT",
+        "contains": "Permission is hereby granted"
+      },
+      "documents": [
+        {
+          "id": "rust-introduction",
+          "slug": "style-guide",
+          "title": "The Rust Style Guide",
+          "path": "src/doc/style-guide/src/README.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/",
+          "catalogId": "rust-style"
+        },
+        {
+          "id": "rust-principles",
+          "slug": "style-guide/principles",
+          "title": "Rust style: principles",
+          "path": "src/doc/style-guide/src/principles.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/principles.html"
+        },
+        {
+          "id": "rust-advice",
+          "slug": "style-guide/advice",
+          "title": "Rust style: advice",
+          "path": "src/doc/style-guide/src/advice.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/advice.html"
+        },
+        {
+          "id": "rust-items",
+          "slug": "style-guide/items",
+          "title": "Rust style: items",
+          "path": "src/doc/style-guide/src/items.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/items.html"
+        },
+        {
+          "id": "rust-statements",
+          "slug": "style-guide/statements",
+          "title": "Rust style: statements",
+          "path": "src/doc/style-guide/src/statements.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/statements.html"
+        },
+        {
+          "id": "rust-expressions",
+          "slug": "style-guide/expressions",
+          "title": "Rust style: expressions",
+          "path": "src/doc/style-guide/src/expressions.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/expressions.html"
+        },
+        {
+          "id": "rust-types",
+          "slug": "style-guide/types",
+          "title": "Rust style: types",
+          "path": "src/doc/style-guide/src/types.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/types.html"
+        },
+        {
+          "id": "rust-cargo",
+          "slug": "style-guide/cargo",
+          "title": "Rust style: cargo",
+          "path": "src/doc/style-guide/src/cargo.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/cargo.html"
+        },
+        {
+          "id": "rust-editions",
+          "slug": "style-guide/editions",
+          "title": "Rust style: editions",
+          "path": "src/doc/style-guide/src/editions.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/editions.html"
+        },
+        {
+          "id": "rust-nightly",
+          "slug": "style-guide/nightly",
+          "title": "Rust style: nightly",
+          "path": "src/doc/style-guide/src/nightly.md",
+          "format": "markdown",
+          "url": "https://doc.rust-lang.org/style-guide/nightly.html"
+        }
+      ]
+    }
+  ],
+  "referenceOnly": [
+    {
+      "catalogId": "typescript-contributors",
+      "title": "TypeScript Contributor Coding Guidelines",
+      "url": "https://github.com/microsoft/TypeScript/wiki/Coding-guidelines",
+      "reason": "The wiki page does not state reuse terms. A license on repository code does not establish the terms for this separate wiki."
+    },
+    {
+      "catalogId": "google-sre",
+      "title": "Addressing Cascading Failures",
+      "url": "https://sre.google/sre-book/addressing-cascading-failures/",
+      "reason": "The published book uses CC BY-NC-ND 4.0. This capture pipeline currently admits public-domain works and licenses permitting redistribution and adaptation without a noncommercial restriction."
+    },
+    {
+      "catalogId": "amazon-retries",
+      "title": "Timeouts, retries, and backoff with jitter",
+      "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+      "reason": "No redistribution license was established for the article. Keep the original-source link and catalog summary."
+    }
+  ]
+}

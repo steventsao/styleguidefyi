@@ -1,0 +1,2 @@
+# Snapshots are hashed as captured. Windows checkout must not rewrite line endings.
+content/mirrors/snapshots/** -text -whitespace

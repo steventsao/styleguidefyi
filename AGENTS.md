@@ -1,4 +1,4 @@
-styleguide.fyi is a static Astro site: one page with a coding style guide, exposed to browser agents over WebMCP. Cloudflare Workers serves `dist/` as static assets. There is no server code, database or CMS.
+styleguide.fyi is a static Astro site: a coding style guide exposed to browser agents over WebMCP, plus a catalog and captured public guides. Cloudflare Workers serves `dist/` as static assets. There is no server code, database or CMS.
 
 ## Commands
 
@@ -8,9 +8,12 @@ pnpm typecheck                     # astro check
 pnpm deploy:preview                # Separate preview deployment on workers.dev
 pnpm run deploy                    # astro build && wrangler deploy (production, styleguide.fyi)
 node scripts/verify-webmcp.mjs     # End-to-end: real Chrome calls all five tools on production
+pnpm verify:site https://styleguide.fyi --commit <full-sha> # Verify deployed assets and release identity
 ```
 
-There is no git-triggered deploy. `pnpm run deploy` is the only way to production. Use `pnpm deploy:preview` to validate changes before merging; it uses `wrangler.preview.jsonc` with no custom-domain routes. The verifier defaults to production; pass the workers.dev URL to check the preview.
+`.github/workflows/ci-deploy.yml` checks pull requests and deploys every successful `main` build to production. It tests, typechecks, builds and verifies the local Cloudflare runtime, then deploys that same artifact and verifies production. Production requires the repository secret `CLOUDFLARE_API_TOKEN` and variable `CLOUDFLARE_ACCOUNT_ID`. Missing credentials fail the deployment visibly. Node 24 and the pinned pnpm version are required.
+
+Use `pnpm deploy:preview` to validate changes before merging; it uses `wrangler.preview.jsonc` with no custom-domain routes. The verifier defaults to production; pass the workers.dev URL to check the preview. For an authorized manual release, set `DEPLOY_COMMIT_SHA` to the clean checkout's full commit hash, run `pnpm run deploy`, then `pnpm verify:site` with that hash. Do not race the automated production deployment.
 
 ## Key Files
 

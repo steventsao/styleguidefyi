@@ -1,0 +1,63 @@
+---
+import Mirror from "../layouts/Mirror.astro";
+import { captures, capturePaths, collections, mirrorChanges, readSnapshot, renderMirror, type Capture } from "../lib/mirrors";
+
+export function getStaticPaths() {
+	return [
+		...capturePaths().map((path) => ({ ...path, props: { ...path.props, collection: collections.find((collection) => collection.id === path.props.capture.repository)! } })),
+		...collections.filter((collection) => !captures.some((capture) => capture.route === collection.id))
+			.map((collection) => ({ params: { mirror: collection.id }, props: { collection } })),
+	];
+}
+
+interface Props {
+	capture?: Capture;
+	collection: { id: string; title: string; documents: Capture[] };
+}
+const { capture, collection } = Astro.props;
+const rendered = capture ? renderMirror(readSnapshot(capture.id, capture.sourceHash), capture) : null;
+const title = capture?.title ?? collection.title;
+---
+
+<Mirror title={`${title} — styleguide.fyi`} description={`Saved public guide: ${title}. Original attribution, capture details and source downloads.`} canonicalPath={`/${capture?.route ?? collection.id}`}>
+	<nav class="mirror-breadcrumbs" aria-label="Breadcrumb">
+		<a href="/library">Captured guides</a>
+		{capture && capture.route !== collection.id && <a href={`/${collection.id}`}>{collection.id}</a>}
+		<a href={`https://github.com/${collection.id}`}>GitHub repository</a>
+	</nav>
+	<h1>{title}</h1>
+	{capture && rendered ? (
+		<>
+			<div class="mirror-provenance">
+				<p>By {capture.author}. Captured <time datetime={capture.capturedAt}>{capture.capturedAt.slice(0, 10)}</time> · <a href={`/licenses/mirrors/${capture.license.id}.txt`}>{capture.license.label}</a>.</p>
+				<div class="mirror-actions">
+					<a href={capture.upstreamUrl}>Read the original</a>
+					<a href={`/${capture.route}.source.txt`}>Download captured source</a>
+					<a href={`/${capture.route}.capture.json`}>Capture metadata</a>
+				</div>
+				<details>
+					<summary>About this snapshot</summary>
+					<p>{mirrorChanges}</p>
+					<p>{capture.revision ? <>Git revision: <a href={`https://github.com/${capture.repository}/commit/${capture.revision}`}><code>{capture.revision.slice(0, 12)}</code></a>.</> : "Rendered-page capture. Its exact Git revision is not established; the checksum identifies the saved page."}</p>
+					<p>SHA-256: <code>{capture.sourceHash}</code></p>
+					<p><a href={capture.sourceUrl}>Captured from</a> · <a href={capture.license.sourceUrl}>License evidence</a> · <a href={capture.license.url}>License terms</a></p>
+				</details>
+			</div>
+			<div class="mirror-reader">
+				<nav class="mirror-toc" aria-label="On this page">
+					<h2>On this page</h2>
+					<ol>{rendered.headings.map((heading) => <li data-depth={heading.depth}><a href={`#${heading.id}`}>{heading.title}</a></li>)}</ol>
+				</nav>
+				<article class="mirror-article" aria-label={`${capture.title} captured text`} set:html={rendered.html} />
+			</div>
+			<footer class="mirror-license"><p>“{capture.title}” by {capture.author}, shared under <a href={capture.license.url}>{capture.license.label}</a>. <a href={`/licenses/mirrors/${capture.license.id}.txt`}>Preserved license notice</a>. Display changes are described above. <a href={capture.upstreamUrl}>Original publication</a>.</p></footer>
+		</>
+	) : (
+		<>
+			<p>Selected documents captured from this public repository. This collection contains {collection.documents.length} saved documents; it does not mirror the repository's source code or every document.</p>
+			<ul class="mirror-document-list">
+				{collection.documents.map((doc) => <li><a href={`/${doc.route}`}>{doc.title}</a><small>{doc.license.label} · captured {doc.capturedAt.slice(0, 10)}</small></li>)}
+			</ul>
+		</>
+	)}
+</Mirror>
