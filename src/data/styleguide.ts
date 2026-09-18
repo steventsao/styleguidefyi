@@ -8,6 +8,16 @@ export interface Rule {
 	prefer?: string;
 	/** Language of the examples. Defaults to "ts". */
 	lang?: string;
+	/** Published evidence the rule rests on. Shown on the page and in the markdown. */
+	references?: Reference[];
+}
+
+export interface Reference {
+	/** The title of the source, as its authors gave it. */
+	title: string;
+	/** Author or publisher, with the year when known. */
+	by: string;
+	url: string;
 }
 
 export interface Section {
@@ -29,15 +39,12 @@ export const styleguide: Styleguide = {
 	title: "A Common Coding Style Guide",
 	url: "https://styleguide.fyi",
 	updated: "2026-09-17",
-	intro:
-		"A shared guide for people and coding agents, working toward consensus through contributions and review. " +
-		"These are language-agnostic defaults, with TypeScript examples. Follow the codebase's style conventions, " +
-		"and judge each rule against the task's requirements. Propose changes with reasons and concrete examples.",
+	intro: "",
 	sections: [
 		{
 			id: "read-first",
 			title: "Read before you write",
-			summary: "Most bad code comes from not knowing what is already there.",
+			summary: "",
 			rules: [
 				{
 					id: "match-the-codebase",
@@ -64,7 +71,7 @@ export const styleguide: Styleguide = {
 		{
 			id: "scope",
 			title: "Keep the change small",
-			summary: "A diff is a cost the reviewer pays. Spend it on the task.",
+			summary: "",
 			rules: [
 				{
 					id: "smallest-diff",
@@ -100,7 +107,7 @@ function emailRecipient(user: User) { /* ... */ }`,
 		{
 			id: "naming",
 			title: "Naming",
-			summary: "A good name removes the need for a comment. A bad one needs a comment nobody will write.",
+			summary: "",
 			rules: [
 				{
 					id: "name-what-it-is",
@@ -142,7 +149,7 @@ const maxUploadBytes = 5 * 1024 * 1024;`,
 		{
 			id: "functions",
 			title: "Functions",
-			summary: "Short, honest, and boring to call.",
+			summary: "",
 			rules: [
 				{
 					id: "one-job",
@@ -212,7 +219,7 @@ async function applyDiscount(orderId: string) {
 		{
 			id: "types-and-data",
 			title: "Types and data",
-			summary: "Let the compiler carry the facts, so that people do not have to.",
+			summary: "",
 			rules: [
 				{
 					id: "parse-at-the-boundary",
@@ -265,7 +272,7 @@ if (Date.now() - session.createdAt > SESSION_TTL_MS) expire(session);`,
 		{
 			id: "errors",
 			title: "Errors",
-			summary: "An error you hide today is an incident you debug blind next month.",
+			summary: "",
 			rules: [
 				{
 					id: "never-swallow",
@@ -318,9 +325,219 @@ if (Date.now() - session.createdAt > SESSION_TTL_MS) expire(session);`,
 			],
 		},
 		{
+			id: "concurrency",
+			title: "Concurrency and retries",
+			summary: "",
+			rules: [
+				{
+					id: "bound-every-wait",
+					title: "Put a timeout or a deadline on every call to a dependency.",
+					why: "A call with no timeout holds its thread, connection or request slot for as long as the dependency stays silent. When a dependency slows down, the waiting callers pile up and the failure spreads to every service that calls them. Derive the timeout from the dependency's measured latency and the deadline the caller inherited, not from a round number. Long-lived work, such as a stream, a long poll or an interactive session, needs an explicit lifetime instead: an idle timeout and a way to end it.",
+					avoid: `const response = await fetch(url); // waits for as long as the server does`,
+					prefer: `const REPORT_TIMEOUT_MS = 5_000;
+
+const response = await fetch(url, { signal: AbortSignal.timeout(REPORT_TIMEOUT_MS) });`,
+					references: [
+						{
+							title: "Addressing Cascading Failures",
+							by: "Site Reliability Engineering, Google, 2016",
+							url: "https://sre.google/sre-book/addressing-cascading-failures/",
+						},
+						{
+							title: "Timeouts, retries, and backoff with jitter",
+							by: "Marc Brooker, Amazon Builders' Library",
+							url: "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+						},
+						{
+							title: "AbortSignal.timeout()",
+							by: "MDN Web Docs",
+							url: "https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static",
+						},
+					],
+				},
+				{
+					id: "retry-with-backoff",
+					title: "Retry a bounded number of times, with exponential backoff and jitter.",
+					why: "An immediate retry hits a dependency that is already failing, and every client retries at the same moment. Bound the attempts and the total time, wait longer after each failure, and add randomness so the retries spread out. Retry only the errors that can succeed on a second try: a timeout or a 503, not a 400. Retry at one layer, the one that can judge safety and enforce the budget, and check what the SDK already retries before you add a loop: when three layers each retry three times, one failure becomes twenty-seven calls.",
+					avoid: `// Retries at once, retries every error, and returns undefined at the end.
+for (let attempt = 0; attempt < 3; attempt++) {
+  try {
+    return await api.get("/rates");
+  } catch {}
+}`,
+					prefer: `for (let attempt = 0; ; attempt++) {
+  try {
+    return await api.get("/rates");
+  } catch (error) {
+    if (!isRetryable(error) || attempt === MAX_RETRIES) throw error;
+    const capMs = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * 2 ** attempt);
+    await sleep(Math.random() * capMs); // "full jitter"
+  }
+}`,
+					references: [
+						{
+							title: "Exponential Backoff And Jitter",
+							by: "Marc Brooker, AWS Architecture Blog, 2015",
+							url: "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
+						},
+						{
+							title: "Handling Overload",
+							by: "Site Reliability Engineering, Google, 2016",
+							url: "https://sre.google/sre-book/handling-overload/",
+						},
+					],
+				},
+				{
+					id: "idempotent-before-retry",
+					title: "Make an operation safe to repeat before you retry it.",
+					why: "A timeout does not say whether the request was processed. A retried \"create order\" that is not idempotent creates two orders, and a retried transfer moves the money twice. Retry only when the operation's contract makes a repeat safe, or when you know the first attempt never reached the receiver. Give a write a key the receiver deduplicates on, and make the receiver enforce it for the whole retry window: a key the receiver ignores guarantees nothing. The HTTP method is only a default. A POST endpoint can promise idempotency, and the one below does.",
+					avoid: `await withRetry(() => api.post("/charges", { amount, customer }));`,
+					prefer: `// One key per intended charge. It stays the same on every retry.
+const idempotencyKey = order.id;
+
+await withRetry(() =>
+  api.post("/charges", { amount, customer }, {
+    headers: { "Idempotency-Key": idempotencyKey },
+  })
+);`,
+					references: [
+						{
+							title: "Making retries safe with idempotent APIs",
+							by: "Malcolm Featonby, Amazon Builders' Library",
+							url: "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+						},
+						{
+							title: "Idempotent requests",
+							by: "Stripe API reference",
+							url: "https://docs.stripe.com/api/idempotent_requests",
+						},
+						{
+							title: "HTTP Semantics, section 9.2.2: Idempotent Methods",
+							by: "RFC 9110, IETF, 2022",
+							url: "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
+						},
+					],
+				},
+				{
+					id: "await-or-hand-off",
+					title: "Await every promise, or hand it to something that owns it.",
+					why: "A promise that is neither awaited, returned nor given a rejection handler has no owner. Its rejection surfaces as an unhandled rejection, which ends a Node.js process by default, and its work races with the code that follows. Give every asynchronous task an owner for its lifetime and its failures: await it or return it; if it must outlive the caller, hand it to a scheduler or a queue, durable when the work must survive a process failure; if it is best effort, catch the rejection and record the failure. `void` marks a promise as intentional and handles nothing. Lint for this; the check is mechanical.",
+					avoid: `async function checkout(cart: Cart) {
+  const order = await placeOrder(cart);
+  sendReceipt(order); // a rejection here crashes the process, or is lost
+  return order;
+}`,
+					prefer: `async function checkout(cart: Cart) {
+  const order = await placeOrder(cart);
+  await receipts.enqueue(order.id); // the queue retries and records failures
+  return order;
+}`,
+					references: [
+						{
+							title: "--unhandled-rejections=mode",
+							by: "Node.js documentation",
+							url: "https://nodejs.org/api/cli.html#--unhandled-rejectionsmode",
+						},
+						{
+							title: "no-floating-promises",
+							by: "typescript-eslint",
+							url: "https://typescript-eslint.io/rules/no-floating-promises/",
+						},
+					],
+				},
+				{
+					id: "propagate-cancellation",
+					title: "Pass cancellation through to the work the caller owns.",
+					why: "When the caller is gone, because the user navigated away, the request timed out or the parent task was cancelled, the work it owns should stop. Work that keeps going spends the capacity the cancellation was meant to free, and can write results nobody will read. Accept a signal, pass it to every call and loop the caller owns, and check it before an expensive step. Cancellation follows ownership: a job the caller handed off keeps its own lifetime, and cleanup such as releasing a lock runs to completion on a fresh, bounded deadline, never on the signal that already fired.",
+					avoid: `async function buildReport(id: string) {
+  // Keeps running after the caller gives up.
+  const rows = await db.query(REPORT_SQL, [id]);
+  return render(rows);
+}`,
+					prefer: `async function buildReport(id: string, { signal }: { signal: AbortSignal }) {
+  const rows = await db.query(REPORT_SQL, [id], { signal });
+  signal.throwIfAborted();
+  return render(rows);
+}`,
+					references: [
+						{
+							title: "AbortController",
+							by: "MDN Web Docs",
+							url: "https://developer.mozilla.org/en-US/docs/Web/API/AbortController",
+						},
+						{
+							title: "Package context",
+							by: "Go standard library documentation",
+							url: "https://pkg.go.dev/context",
+						},
+					],
+				},
+				{
+					id: "atomic-check-and-act",
+					title: "Make a check and the action it guards one atomic step.",
+					why: "Between reading a value and acting on it, another request can change it. A balance check followed by a separate write lets two concurrent withdrawals both pass the check. Put the condition in the write itself: a conditional update, a unique constraint, a compare-and-swap, or a transaction at an isolation level that detects the conflict. Then handle the case where the write reports that the condition failed.",
+					avoid: `const account = await accounts.get(id);
+if (account.balance >= amount) {
+  // Two concurrent callers both pass the check.
+  await accounts.update(id, { balance: account.balance - amount });
+}`,
+					prefer: `const updated = await db.run(
+  "UPDATE accounts SET balance = balance - $1 WHERE id = $2 AND balance >= $1",
+  [amount, id]
+);
+if (updated.rowCount === 0) throw new InsufficientFundsError(id, amount);`,
+					references: [
+						{
+							title: "Designing Data-Intensive Applications, chapter 7: Transactions",
+							by: "Martin Kleppmann, O'Reilly, 2017",
+							url: "https://dataintensive.net/",
+						},
+						{
+							title: "Transaction Isolation",
+							by: "PostgreSQL documentation",
+							url: "https://www.postgresql.org/docs/current/transaction-iso.html",
+						},
+						{
+							title: "CWE-367: Time-of-check Time-of-use (TOCTOU) Race Condition",
+							by: "MITRE",
+							url: "https://cwe.mitre.org/data/definitions/367.html",
+						},
+					],
+				},
+				{
+					id: "monotonic-clock-for-durations",
+					title: "Measure elapsed time with a monotonic clock.",
+					why: "The wall clock jumps: an NTP correction, a leap second, a suspended laptop. A duration computed from two wall-clock readings can be negative, and code that divides by it or sleeps for it fails in ways no test reproduces. Within one process, measure timeouts, latency and elapsed time with a monotonic clock. A monotonic reading is relative to the start of that process or page, so it means nothing to another process or after a restart. For a deadline or an expiry that is stored, shared or compared across restarts, use a wall-clock instant and accept its error.",
+					avoid: `const startedAt = Date.now();
+await work();
+const elapsedMs = Date.now() - startedAt; // negative after a clock correction`,
+					prefer: `const startedAt = performance.now();
+await work();
+const elapsedMs = performance.now() - startedAt;`,
+					references: [
+						{
+							title: "How and why the leap second affected Cloudflare DNS",
+							by: "Cloudflare blog, 2017",
+							url: "https://blog.cloudflare.com/how-and-why-the-leap-second-affected-cloudflare-dns/",
+						},
+						{
+							title: "Package time: Monotonic Clocks",
+							by: "Go standard library documentation",
+							url: "https://pkg.go.dev/time#hdr-Monotonic_Clocks",
+						},
+						{
+							title: "performance.now()",
+							by: "MDN Web Docs",
+							url: "https://developer.mozilla.org/en-US/docs/Web/API/Performance/now",
+						},
+					],
+				},
+			],
+		},
+		{
 			id: "comments",
 			title: "Comments",
-			summary: "The code says what. The comment is for what the code cannot say.",
+			summary: "",
 			rules: [
 				{
 					id: "comment-why",
@@ -351,7 +568,7 @@ retries += 1;`,
 		{
 			id: "tests",
 			title: "Tests",
-			summary: "A test is worth what it catches, minus what it costs to keep green.",
+			summary: "",
 			rules: [
 				{
 					id: "test-behavior",
@@ -390,7 +607,7 @@ retries += 1;`,
 		{
 			id: "structure",
 			title: "Dependencies and structure",
-			summary: "Every import is a promise to keep something working.",
+			summary: "",
 			rules: [
 				{
 					id: "justify-dependencies",
@@ -420,7 +637,7 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY);`,
 		{
 			id: "commits",
 			title: "Commits and reviews",
-			summary: "History is documentation that cannot go stale. Write it on purpose.",
+			summary: "",
 			rules: [
 				{
 					id: "atomic-commits",
@@ -453,7 +670,7 @@ deploys. One retry with a 2 s delay covers it, so we stop paging on-call.`,
 		{
 			id: "agents",
 			title: "Working with coding agents",
-			summary: "Shared expectations for any agent that touches your code.",
+			summary: "",
 			rules: [
 				{
 					id: "verify-before-done",

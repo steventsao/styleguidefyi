@@ -5,12 +5,12 @@ styleguide.fyi is a static Astro site: one page with a coding style guide, expos
 ```bash
 pnpm test                          # Unit tests: guide data, search, markdown, WebMCP tools
 pnpm typecheck                     # astro check
-pnpm deploy:preview                # Separate shell experiment on workers.dev
+pnpm deploy:preview                # Separate preview deployment on workers.dev
 pnpm run deploy                    # astro build && wrangler deploy (production, styleguide.fyi)
-node scripts/verify-webmcp.mjs     # End-to-end: real Chrome calls exec on the live shell preview
+node scripts/verify-webmcp.mjs     # End-to-end: real Chrome calls all five tools on production
 ```
 
-There is no git-triggered deploy. `pnpm run deploy` is the only way to production. Use `pnpm deploy:preview` for the shell experiment; it uses `wrangler.preview.jsonc` with no custom-domain routes. The verifier defaults to the live shell preview; pass a URL to check another deployment.
+There is no git-triggered deploy. `pnpm run deploy` is the only way to production. Use `pnpm deploy:preview` to validate changes before merging; it uses `wrangler.preview.jsonc` with no custom-domain routes. The verifier defaults to production; pass the workers.dev URL to check the preview.
 
 ## Key Files
 
@@ -18,14 +18,14 @@ There is no git-triggered deploy. `pnpm run deploy` is the only way to productio
 | ---------------------------- | ----------------------------------------------------------------------------------------- |
 | `src/data/styleguide.ts`     | The guide: sections and rules. The single source for the page, `/styleguide.md`, and the tools |
 | `src/lib/styleguide.ts`      | Markdown output and rule search                                                           |
-| `src/lib/webmcp-tools.ts`    | The single `exec` WebMCP definition. No DOM access; shell execution is injected             |
+| `src/lib/webmcp-tools.ts`    | Four guide tools plus `exec`. Page actions and shell execution are injected             |
 | `src/lib/guide-shell.ts`   | Just Bash runtime with a read-only virtual filesystem and execution limits |
 | `src/scripts/shell-client.ts` | Creates a browser worker on demand and enforces its lifetime |
 | `src/scripts/page.ts`        | Browser script: registers the tools, runs the filter, the Run buttons and the copy button |
 | `src/pages/index.astro`      | The page                                                                                  |
 | `src/pages/styleguide.md.ts` | Static endpoint for the markdown version                                                  |
 | `public/_headers`            | CORS and charset for `/styleguide.md`                                                     |
-| `scripts/fixtures/exec-cases.json` | Reviewed complete `exec` inputs/results, shared by unit tests and live WebMCP checks |
+| `scripts/fixtures/exec-cases.json` | Reviewed `exec` results; `guide-tool-cases.json` preserves the four original tools. Both feed unit/live checks |
 
 ## Rules
 

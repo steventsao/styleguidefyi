@@ -3,9 +3,11 @@ import { Code } from "astro:components";
 import Base from "../layouts/Base.astro";
 import { styleguide } from "../data/styleguide";
 import { countRules } from "../lib/styleguide";
-import { shellToolMetadata } from "../lib/webmcp-tools";
+import { createTools, shellToolMetadata } from "../lib/webmcp-tools";
 
 const ruleCount = countRules(styleguide);
+// Metadata for the original four tools; page actions are wired in the browser.
+const guideTools = createTools(styleguide, { revealSection() {}, filterRules() {} });
 
 const CODE_THEMES = { light: "github-light", dark: "github-dark" } as const;
 
@@ -36,12 +38,12 @@ const shellExamples = [
 
 <Base
 	title="styleguide.fyi — a common coding style guide"
-	description={`${ruleCount} practical coding rules for people and agents to review and improve together. Read them, curl them as markdown, or query them over WebMCP.`}
+	description={`${ruleCount} coding rules with TypeScript examples. Available as Markdown and through WebMCP.`}
 >
 	<section class="hero">
-		<p class="eyebrow">Shell preview · {ruleCount} rules · updated {styleguide.updated}</p>
-		<h1>A common coding style guide for people and agents.</h1>
-		<p class="lede">{styleguide.intro}</p>
+		<p class="eyebrow">{ruleCount} rules · updated {styleguide.updated}</p>
+		<h1>Coding style guide.</h1>
+		{styleguide.intro && <p class="lede">{styleguide.intro}</p>}
 		<div class="hero-actions">
 			<button type="button" class="button button-primary" id="copy-markdown">Copy as markdown</button>
 			<a class="button" href="/styleguide.md">styleguide.md</a>
@@ -75,7 +77,7 @@ const shellExamples = [
 						<header class="section-header">
 							<p class="section-number">{String(sectionIndex + 1).padStart(2, "0")}</p>
 							<h2>{section.title}</h2>
-							<p class="section-summary">{section.summary}</p>
+							{section.summary && <p class="section-summary">{section.summary}</p>}
 						</header>
 
 						{section.rules.map((rule, ruleIndex) => (
@@ -103,6 +105,16 @@ const shellExamples = [
 										)}
 									</div>
 								)}
+								{rule.references && (
+									<ul class="rule-sources" aria-label="Sources">
+										{rule.references.map((reference) => (
+											<li>
+												<a href={reference.url}>{reference.title}</a>
+												<span class="rule-source-by"> ({reference.by})</span>
+											</li>
+										))}
+									</ul>
+								)}
 							</article>
 						))}
 					</section>
@@ -114,7 +126,6 @@ const shellExamples = [
 				<header class="section-header">
 					<p class="section-number">↳</p>
 					<h2>Use it from an agent</h2>
-					<p class="section-summary">Three ways in. Pick the one your agent can reach.</p>
 				</header>
 
 				<h3>1. Markdown, for a terminal agent</h3>
@@ -123,9 +134,10 @@ const shellExamples = [
 
 				<h3>2. WebMCP, for a browser agent</h3>
 				<p>
-					This preview registers one read-only shell tool with
+					This page registers five read-only tools with
 					<a href="https://webmachinelearning.github.io/webmcp/">WebMCP</a>. An agent that runs in the browser
-					uses <code>ls</code>, <code>cat</code>, <code>grep</code> and pipes to explore a virtual copy of the guide.
+					can list sections, read a section, search rules, or read the whole guide. The additional <code>exec</code> tool
+					uses <code>ls</code>, <code>cat</code>, <code>grep</code> and pipes for custom queries over a virtual copy of the guide.
 				</p>
 				<p class="webmcp-status" id="webmcp-status" data-state="checking">Checking this browser for WebMCP…</p>
 
@@ -135,6 +147,40 @@ const shellExamples = [
 					Files are read-only. Each call starts fresh; commands run in this browser with network access disabled.
 				</p>
 				<ul class="tools">
+					{
+						guideTools.map((tool) => {
+							const properties = (tool.inputSchema.properties ?? {}) as Record<
+								string,
+								{ enum?: string[]; description?: string }
+							>;
+							return (
+								<li class="tool">
+									<form data-tool={tool.name}>
+										<div class="tool-head">
+											<code class="tool-name">{tool.name}</code>
+											<div class="tool-inputs">
+												{Object.entries(properties).map(([name, property]) =>
+													property.enum ? (
+														<select name={name} aria-label={name} required>
+															{property.enum.map((value) => (
+																<option value={value}>{value}</option>
+															))}
+														</select>
+													) : (
+														<input type="text" name={name} aria-label={name} placeholder={name} required />
+													)
+												)}
+												<button type="submit" class="button">Run</button>
+											</div>
+										</div>
+										<p class="tool-description">{tool.description}</p>
+										<pre class="tool-output" hidden />
+									</form>
+								</li>
+							);
+						})
+					}
+
 					<li class="tool">
 						<form data-tool={shellToolMetadata.name}>
 							<div class="tool-head">
@@ -405,6 +451,23 @@ const shellExamples = [
 		color: var(--prefer);
 	}
 
+	.rule-sources {
+		margin: 14px 0 0 var(--rule-indent);
+		padding: 0;
+		list-style: none;
+		font-size: 0.8125rem;
+		line-height: 1.6;
+		color: var(--muted);
+	}
+
+	.rule-sources a {
+		color: var(--text-secondary);
+	}
+
+	.rule-sources a:hover {
+		color: var(--accent);
+	}
+
 	.content :global(.astro-code) {
 		margin: 0;
 		padding: 10px 14px 12px;
@@ -481,6 +544,14 @@ const shellExamples = [
 		padding: 0 !important;
 	}
 
+	.tool-inputs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.tool-inputs input,
+	.tool-inputs select,
 	.tool textarea {
 		padding: 7px 10px;
 		font: inherit;
@@ -553,7 +624,8 @@ const shellExamples = [
 		}
 
 		.rule-why,
-		.examples {
+		.examples,
+		.rule-sources {
 			margin-left: 0;
 		}
 	}

@@ -1,6 +1,6 @@
 import { styleguide } from "../data/styleguide";
 import { countRules, searchRules, styleguideToMarkdown } from "../lib/styleguide";
-import { createShellTool, type WebMcpTool } from "../lib/webmcp-tools";
+import { createTools, type PageActions, type WebMcpTool } from "../lib/webmcp-tools";
 import { runShell } from "./shell-client";
 
 interface ModelContext {
@@ -16,6 +16,7 @@ declare global {
 	}
 }
 
+const REVEAL_HIGHLIGHT_MS = 2000;
 const COPIED_LABEL_MS = 1500;
 
 const filterInput = document.querySelector<HTMLInputElement>("#rule-filter")!;
@@ -39,7 +40,25 @@ function applyFilter(query: string) {
 	filterCount.textContent = isFiltering ? `${matchingIds.size} of ${countRules(styleguide)} rules` : "";
 }
 
-const tools = [createShellTool(runShell)];
+const page: PageActions = {
+	revealSection(sectionId) {
+		filterInput.value = "";
+		applyFilter("");
+
+		const section = document.getElementById(sectionId);
+		if (!section) return;
+		section.scrollIntoView({ block: "start" });
+		section.classList.add("is-revealed");
+		setTimeout(() => section.classList.remove("is-revealed"), REVEAL_HIGHLIGHT_MS);
+	},
+	filterRules(query) {
+		filterInput.value = query;
+		applyFilter(query);
+		document.getElementById("rules")?.scrollIntoView({ block: "start" });
+	},
+};
+
+const tools = createTools(styleguide, page, runShell);
 
 filterInput.addEventListener("input", () => applyFilter(filterInput.value));
 
@@ -66,18 +85,20 @@ async function registerTools() {
 	}
 
 	if (failures.length > 0) {
-		setStatus("failed", "WebMCP is present, but exec did not register. See the console.");
+		setStatus("failed", `WebMCP is present, but ${failures.length} of ${tools.length} tools did not register. See the console.`);
 		return;
 	}
-	setStatus("active", "WebMCP is active. One tool is registered: exec.");
+	setStatus("active", `WebMCP is active. ${tools.length} tools are registered, including exec.`);
 }
 
 registerTools();
 
-// --- The Run form calls the same tool as the agent ---
+// --- Run forms use the same tool implementations without scrolling or filtering the page ---
+
+const previewTools = createTools(styleguide, { revealSection() {}, filterRules() {} }, runShell);
 
 for (const form of document.querySelectorAll<HTMLFormElement>("form[data-tool]")) {
-	const tool = tools.find((candidate) => candidate.name === form.dataset.tool)!;
+	const tool = previewTools.find((candidate) => candidate.name === form.dataset.tool)!;
 	const output = form.querySelector<HTMLElement>(".tool-output")!;
 
 	form.addEventListener("submit", async (event) => {
@@ -90,7 +111,7 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-tool]")
 		try {
 			const input = Object.fromEntries(new FormData(form));
 			const result = await tool.execute(input);
-			output.textContent = JSON.stringify(result, null, 2);
+			output.textContent = typeof result === "string" ? result : JSON.stringify(result, null, 2);
 		} finally {
 			button.disabled = false;
 			button.textContent = "Run";

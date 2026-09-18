@@ -18,11 +18,14 @@ const { values, positionals } = parseArgs({
 	allowPositionals: true,
 });
 if (positionals.length > 1) throw new Error("Usage: node scripts/verify-webmcp.mjs [url] [--output path]");
-const url = positionals[0] ?? "https://styleguidefyi-shell.steventsao.workers.dev/";
+const url = positionals[0] ?? "https://styleguide.fyi/";
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const REGISTRATION_WAIT_MS = 1500;
 
-const CASES = JSON.parse(await readFile(new URL("./fixtures/exec-cases.json", import.meta.url), "utf8"));
+const CASES = [
+	...JSON.parse(await readFile(new URL("./fixtures/exec-cases.json", import.meta.url), "utf8")),
+	...JSON.parse(await readFile(new URL("./fixtures/guide-tool-cases.json", import.meta.url), "utf8")),
+];
 
 const userDataDir = await mkdtemp(join(tmpdir(), "verify-webmcp-"));
 const chrome = spawn(CHROME, [
@@ -91,10 +94,11 @@ async function inspectPage(cases) {
 	if (!modelContext) return { entryPoint, pageStatus, tools: [], calls: [] };
 
 	const registered = await modelContext.getTools();
-	const tool = registered.find((candidate) => candidate.name === "exec");
 	const calls = [];
-	if (tool) for (const test of cases) {
+	for (const test of cases) {
 		try {
+			const tool = registered.find((candidate) => candidate.name === test.tool);
+			if (!tool) throw new Error(`Tool ${test.tool} is not registered`);
 			let result;
 			try {
 				result = await modelContext.executeTool(tool, test.input);
@@ -103,10 +107,13 @@ async function inspectPage(cases) {
 				if (!String(error).includes("parse input")) throw error;
 				result = await modelContext.executeTool(tool, JSON.stringify(test.input));
 			}
-			if (typeof result === "string") result = JSON.parse(result);
-			calls.push({ label: test.label, input: test.input, result });
+			if (typeof result === "string") {
+				try { result = JSON.parse(result); }
+				catch { /* A markdown result may already be a decoded string. */ }
+			}
+			calls.push({ label: test.label, tool: test.tool, input: test.input, result });
 		} catch (error) {
-			calls.push({ label: test.label, input: test.input, error: String(error) });
+			calls.push({ label: test.label, tool: test.tool, input: test.input, error: String(error) });
 		}
 	}
 	return { entryPoint, pageStatus, tools: registered.map(({ name }) => name), calls };
@@ -126,7 +133,7 @@ try {
 	const evaluation = await send(
 		"Runtime.evaluate",
 		{
-			expression: `(${inspectPage})(${JSON.stringify(CASES.map(({ label, input }) => ({ label, input })))})`,
+			expression: `(${inspectPage})(${JSON.stringify(CASES.map(({ label, tool, input }) => ({ label, tool, input })))})`,
 			awaitPromise: true,
 			returnByValue: true,
 		},
@@ -147,7 +154,7 @@ try {
 	console.log(`Tools:       ${report.tools.join(", ") || "none"}\n`);
 	assertWebMcpReport(report, CASES);
 	for (const call of report.calls) console.log(`PASS  ${call.label} (exact result)`);
-	console.log(`\nOne exec tool registered; all ${CASES.length} captured results match the reviewed fixtures.`);
+	console.log(`\nAll five tools are registered; all ${CASES.length} captured results match the reviewed fixtures.`);
 } catch (error) {
 	console.error(error);
 	exitCode = 1;

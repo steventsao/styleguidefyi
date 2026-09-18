@@ -4,7 +4,7 @@ import { guideFiles } from "./guide-files";
 import { runGuideShell } from "./guide-shell";
 import { MAX_COMMAND_LENGTH, MAX_OUTPUT_BYTES } from "./shell-protocol";
 import { countRules, styleguideToMarkdown } from "./styleguide";
-import { createShellTool } from "./webmcp-tools";
+import { createShellTool, createTools } from "./webmcp-tools";
 import cases from "../../scripts/fixtures/exec-cases.json";
 
 describe("guide shell", () => {
@@ -70,6 +70,12 @@ describe("guide shell", () => {
 });
 
 describe("exec WebMCP tool", () => {
+	test("adds exec while preserving all four guide tools", async () => {
+		const tools = createTools(styleguide, { revealSection() {}, filterRules() {} }, runGuideShell);
+		expect(tools.map(({ name }) => name)).toEqual(["list-sections", "get-section", "search-rules", "get-styleguide", "exec"]);
+		expect(await tools.find(({ name }) => name === "exec")!.execute({ command: "pwd" })).toEqual({ stdout: "/guide\n", stderr: "", exitCode: 0 });
+	});
+
 	test.each(cases)("matches the reviewed result: $label", async ({ input, expected }) => {
 		const actual = await createShellTool(runGuideShell).execute(input);
 		expect(actual).toStrictEqual(expected);

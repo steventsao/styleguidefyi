@@ -1,11 +1,14 @@
 import { expect, test } from "vitest";
-import cases from "./fixtures/exec-cases.json";
-import { assertWebMcpReport } from "./webmcp-results.mjs";
+import execCases from "./fixtures/exec-cases.json";
+import guideCases from "./fixtures/guide-tool-cases.json";
+import { assertWebMcpReport, EXPECTED_TOOLS } from "./webmcp-results.mjs";
+
+const cases = [...execCases, ...guideCases];
 
 function validReport() {
 	return {
-		tools: ["exec"],
-		calls: cases.map(({ label, input, expected }) => ({ label, input, result: structuredClone(expected) })),
+		tools: [...EXPECTED_TOOLS],
+		calls: cases.map(({ label, tool, input, expected }) => ({ label, tool, input, result: structuredClone(expected) })),
 	};
 }
 
@@ -26,7 +29,7 @@ test.each([
 	expect(() => assertWebMcpReport(report, cases)).toThrow(/list virtual files/);
 });
 
-test.each(["missing", "extra", "duplicate", "wrong input", "rejected call", "wrong tool"])("rejects an invalid capture: %s", (mutation) => {
+test.each(["missing", "extra", "duplicate", "wrong input", "rejected call", "wrong tool", "missing guide tool", "wrong called tool"])("rejects an invalid capture: %s", (mutation) => {
 	const report = validReport();
 	if (mutation === "missing") report.calls.pop();
 	if (mutation === "extra") report.calls.push(report.calls[0]);
@@ -37,5 +40,7 @@ test.each(["missing", "extra", "duplicate", "wrong input", "rejected call", "wro
 		Object.assign(report.calls[0], { error: "executeTool rejected" });
 	}
 	if (mutation === "wrong tool") report.tools.push("unexpected-tool");
+	if (mutation === "missing guide tool") report.tools.shift();
+	if (mutation === "wrong called tool") report.calls[0].tool = "get-styleguide";
 	expect(() => assertWebMcpReport(report, cases)).toThrow();
 });
