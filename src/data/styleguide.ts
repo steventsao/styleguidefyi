@@ -334,8 +334,8 @@ if (Date.now() - session.createdAt > SESSION_TTL_MS) expire(session);`,
 			rules: [
 				{
 					id: "bound-every-wait",
-					title: "Put a timeout on every call that can wait.",
-					why: "A call with no timeout holds its thread, connection or request slot for as long as the dependency stays silent. When a dependency slows down, the waiting callers pile up and the failure spreads to every service that calls them. Derive the timeout from the dependency's measured latency and the caller's own deadline, not from a round number. A stream or a long poll is still bounded: it has an idle timeout and a way to end.",
+					title: "Put a timeout or a deadline on every call to a dependency.",
+					why: "A call with no timeout holds its thread, connection or request slot for as long as the dependency stays silent. When a dependency slows down, the waiting callers pile up and the failure spreads to every service that calls them. Derive the timeout from the dependency's measured latency and the deadline the caller inherited, not from a round number. Long-lived work, such as a stream, a long poll or an interactive session, needs an explicit lifetime instead: an idle timeout and a way to end it.",
 					avoid: `const response = await fetch(url); // waits for as long as the server does`,
 					prefer: `const REPORT_TIMEOUT_MS = 5_000;
 
@@ -361,7 +361,7 @@ const response = await fetch(url, { signal: AbortSignal.timeout(REPORT_TIMEOUT_M
 				{
 					id: "retry-with-backoff",
 					title: "Retry a bounded number of times, with exponential backoff and jitter.",
-					why: "An immediate retry hits a dependency that is already failing, and every client retries at the same moment. Bound the attempts, wait longer after each failure, and add randomness so the retries spread out. Retry only the errors that can succeed on a second try: a timeout or a 503, not a 400. Retry at one layer; when three layers each retry three times, one failure becomes twenty-seven calls.",
+					why: "An immediate retry hits a dependency that is already failing, and every client retries at the same moment. Bound the attempts and the total time, wait longer after each failure, and add randomness so the retries spread out. Retry only the errors that can succeed on a second try: a timeout or a 503, not a 400. Retry at one layer, the one that can judge safety and enforce the budget, and check what the SDK already retries before you add a loop: when three layers each retry three times, one failure becomes twenty-seven calls.",
 					avoid: `// Retries at once, retries every error, and returns undefined at the end.
 for (let attempt = 0; attempt < 3; attempt++) {
   try {
@@ -393,7 +393,7 @@ for (let attempt = 0; attempt < 3; attempt++) {
 				{
 					id: "idempotent-before-retry",
 					title: "Make an operation safe to repeat before you retry it.",
-					why: "A timeout does not say whether the request was processed. A retried \"create order\" that is not idempotent creates two orders, and a retried transfer moves the money twice. Give each write a key the receiver deduplicates on, or define the operation so that a repeat has no further effect. A read or a full replacement is idempotent by definition; a POST or an increment is not.",
+					why: "A timeout does not say whether the request was processed. A retried \"create order\" that is not idempotent creates two orders, and a retried transfer moves the money twice. Retry only when the operation's contract makes a repeat safe, or when you know the first attempt never reached the receiver. Give a write a key the receiver deduplicates on, and make the receiver enforce it for the whole retry window: a key the receiver ignores guarantees nothing. The HTTP method is only a default. A POST endpoint can promise idempotency, and the one below does.",
 					avoid: `await withRetry(() => api.post("/charges", { amount, customer }));`,
 					prefer: `// One key per intended charge. It stays the same on every retry.
 const idempotencyKey = order.id;
@@ -424,7 +424,7 @@ await withRetry(() =>
 				{
 					id: "await-or-hand-off",
 					title: "Await every promise, or hand it to something that owns it.",
-					why: "A promise that is neither awaited nor returned has no error handler and no caller that waits for it. Its rejection surfaces as an unhandled rejection, which ends a Node.js process by default, and its work races with the code that follows. If the work must outlive the caller, hand it to a queue or a scheduler that retries and records failures. Lint for this; the check is mechanical.",
+					why: "A promise that is neither awaited, returned nor given a rejection handler has no owner. Its rejection surfaces as an unhandled rejection, which ends a Node.js process by default, and its work races with the code that follows. Give every asynchronous task an owner for its lifetime and its failures: await it or return it; if it must outlive the caller, hand it to a scheduler or a queue, durable when the work must survive a process failure; if it is best effort, catch the rejection and record the failure. `void` marks a promise as intentional and handles nothing. Lint for this; the check is mechanical.",
 					avoid: `async function checkout(cart: Cart) {
   const order = await placeOrder(cart);
   sendReceipt(order); // a rejection here crashes the process, or is lost
@@ -450,8 +450,8 @@ await withRetry(() =>
 				},
 				{
 					id: "propagate-cancellation",
-					title: "Pass cancellation through to the work you start.",
-					why: "When the caller is gone, because the user navigated away, the request timed out or the parent task was cancelled, the work it started should stop. Work that keeps going spends the capacity the cancellation was meant to free, and can write results nobody will read. Accept a signal, pass it to every call and loop you start, and check it before an expensive step.",
+					title: "Pass cancellation through to the work the caller owns.",
+					why: "When the caller is gone, because the user navigated away, the request timed out or the parent task was cancelled, the work it owns should stop. Work that keeps going spends the capacity the cancellation was meant to free, and can write results nobody will read. Accept a signal, pass it to every call and loop the caller owns, and check it before an expensive step. Cancellation follows ownership: a job the caller handed off keeps its own lifetime, and cleanup such as releasing a lock runs to completion on a fresh, bounded deadline, never on the signal that already fired.",
 					avoid: `async function buildReport(id: string) {
   // Keeps running after the caller gives up.
   const rows = await db.query(REPORT_SQL, [id]);
@@ -510,7 +510,7 @@ if (updated.rowCount === 0) throw new InsufficientFundsError(id, amount);`,
 				{
 					id: "monotonic-clock-for-durations",
 					title: "Measure elapsed time with a monotonic clock.",
-					why: "The wall clock jumps: an NTP correction, a leap second, a suspended laptop. A duration computed from two wall-clock readings can be negative, and code that divides by it or sleeps for it fails in ways no test reproduces. Use a monotonic clock for timeouts, rate limits and latency measurements. Use the wall clock for timestamps only.",
+					why: "The wall clock jumps: an NTP correction, a leap second, a suspended laptop. A duration computed from two wall-clock readings can be negative, and code that divides by it or sleeps for it fails in ways no test reproduces. Within one process, measure timeouts, latency and elapsed time with a monotonic clock. A monotonic reading is relative to the start of that process or page, so it means nothing to another process or after a restart. For a deadline or an expiry that is stored, shared or compared across restarts, use a wall-clock instant and accept its error.",
 					avoid: `const startedAt = Date.now();
 await work();
 const elapsedMs = Date.now() - startedAt; // negative after a clock correction`,
