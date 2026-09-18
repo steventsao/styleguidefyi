@@ -142,7 +142,7 @@ export const shellToolMetadata = {
 		"Use ls, cat, find, tree, grep, rg, head, tail, wc, sort, uniq, cut, tr, sed, awk, jq and pipes. " +
 		"No writes, network or external programs. No state persists between calls. " +
 		"Returns {stdout, stderr, exitCode}; a nonzero exitCode indicates a command error. " +
-		"Commands are limited to 4096 characters, execution to 3 seconds and output to 64 KiB. " +
+		"Commands are limited to 4096 characters, execution to 3 seconds and output to 64 KiB, counted across every command in a pipeline. " +
 		"Narrow large queries with head or more specific paths.",
 	inputSchema: {
 		type: "object",

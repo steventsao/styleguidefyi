@@ -193,7 +193,7 @@ const shellExamples = [
 							<div class="shell-examples">
 								{shellExamples.map((example) => <button type="button" class="button" data-shell-command={example.command}>{example.label}</button>)}
 							</div>
-							<p class="tool-description">Up to 3 seconds of execution and 64 KiB of output per call. Use <code>head</code> or a specific path to narrow results.</p>
+							<p class="tool-description">Up to 3 seconds of execution and 64 KiB of output per call, counted across every command in a pipeline. Use <code>head</code> or a specific path to narrow results.</p>
 							<pre class="tool-output" aria-live="polite" hidden />
 						</form>
 					</li>

@@ -3,6 +3,28 @@ import { styleguide } from "../data/styleguide";
 import { guideFiles } from "./guide-files";
 import { EXECUTION_TIMEOUT_MS, MAX_COMMAND_LENGTH, MAX_OUTPUT_BYTES, shellError, type ShellResult } from "./shell-protocol";
 
+const MAX_COMMAND_COUNT = 1000;
+const MAX_LOOP_ITERATIONS = 1000;
+const MAX_CALL_DEPTH = 30;
+
+// just-bash reports a bare limit and tells the caller to raise it, which an agent cannot do. Say what to do instead.
+const RAISE_LIMIT_HINT = /, increase executionLimits\.\w+/g;
+const OUTPUT_LIMIT = /output size (limit )?exceeded/;
+const EXECUTION_LIMIT = /too many commands|too many iterations|maximum recursion depth|maximum nesting depth|execution deadline|execution timeout/;
+const OUTPUT_LIMIT_GUIDANCE =
+	`The ${MAX_OUTPUT_BYTES / 1024} KiB output limit counts the output of every command in a pipeline, not only the final output. ` +
+	"Read one file per call, run grep, jq, sed or awk on the file directly instead of piping cat into them, or narrow the output with head or a more specific path.";
+const EXECUTION_LIMIT_GUIDANCE =
+	`Each call stops after ${MAX_COMMAND_COUNT} commands, ${MAX_LOOP_ITERATIONS} loop iterations, ${MAX_CALL_DEPTH} nested calls or ${EXECUTION_TIMEOUT_MS / 1000} seconds, and these limits cannot be raised. ` +
+	"Loops are rarely needed: grep -r, find and jq work across files in one command. Otherwise split the work into smaller calls.";
+
+function explainLimits(result: ShellResult): ShellResult {
+	const guidance = OUTPUT_LIMIT.test(result.stderr) ? OUTPUT_LIMIT_GUIDANCE : EXECUTION_LIMIT.test(result.stderr) ? EXECUTION_LIMIT_GUIDANCE : null;
+	if (!guidance) return result;
+	// Partial output is dropped: an agent must not mistake it for the complete result.
+	return { stdout: "", stderr: `${result.stderr.replace(RAISE_LIMIT_HINT, "").trimEnd()}\n${guidance}\n`, exitCode: 126 };
+}
+
 /** Reject mutations at the filesystem boundary, including redirects and sed -i. */
 function readOnlyFilesystem(files: Record<string, string>, onWrite: () => void): IFileSystem {
 	const fs = new InMemoryFs(files, { maxTotalBytes: 1024 * 1024 });
@@ -51,9 +73,9 @@ export async function runGuideShell(command: string): Promise<ShellResult> {
 				maxSourceBytes: MAX_COMMAND_LENGTH * 4,
 				maxExecutionTimeMs: EXECUTION_TIMEOUT_MS,
 				maxOutputSize: MAX_OUTPUT_BYTES,
-				maxCommandCount: 1000,
-				maxLoopIterations: 1000,
-				maxCallDepth: 30,
+				maxCommandCount: MAX_COMMAND_COUNT,
+				maxLoopIterations: MAX_LOOP_ITERATIONS,
+				maxCallDepth: MAX_CALL_DEPTH,
 				maxStringLength: 1024 * 1024,
 				maxLiveBytes: 8 * 1024 * 1024,
 				maxInputBytes: 8 * 1024 * 1024,
@@ -62,9 +84,9 @@ export async function runGuideShell(command: string): Promise<ShellResult> {
 		const { stdout, stderr, exitCode } = await bash.exec(command);
 		// Some commands translate all filesystem errors to ENOENT. Preserve the actual cause.
 		if (writeAttempted) return shellError("EROFS: guide filesystem is read-only");
-		return { stdout, stderr, exitCode };
+		return explainLimits({ stdout, stderr, exitCode });
 	} catch (error) {
 		if (writeAttempted) return shellError("EROFS: guide filesystem is read-only");
-		return shellError(error instanceof Error ? error.message : "Shell execution failed.");
+		return explainLimits(shellError(error instanceof Error ? error.message : "Shell execution failed."));
 	}
 }

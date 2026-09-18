@@ -67,6 +67,42 @@ describe("guide shell", () => {
 		expect(new TextEncoder().encode(output.stdout + output.stderr).length).toBeLessThanOrEqual(MAX_OUTPUT_BYTES);
 		expect((await runGuideShell("echo ready")).stdout).toBe("ready\n");
 	});
+
+	test("explains the output limit when a pipeline exceeds it, even if the final output is small", async () => {
+		// Each file fits on its own. Together they exceed the budget, which counts every pipeline stage.
+		const files = guideFiles(styleguide);
+		const paths = ["/guide/styleguide.md", "/guide/consensus.json", "/guide/index.json"];
+		expect(paths.every((path) => new TextEncoder().encode(files[path]).length < MAX_OUTPUT_BYTES)).toBe(true);
+		expect(paths.reduce((total, path) => total + new TextEncoder().encode(files[path]).length, 0)).toBeGreaterThan(MAX_OUTPUT_BYTES);
+
+		const result = await runGuideShell("cat styleguide.md consensus.json index.json | wc -c");
+		expect(result.exitCode).toBe(126);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toContain("output size limit exceeded");
+		expect(result.stderr).toMatch(/64 KiB/);
+		expect(result.stderr).toMatch(/pipeline/);
+		expect(result.stderr).toMatch(/one file per call/);
+		expect(result.stderr).toMatch(/head/);
+		expect(result.stderr).not.toMatch(/executionLimits/);
+		expect(new TextEncoder().encode(result.stderr).length).toBeLessThanOrEqual(MAX_OUTPUT_BYTES);
+		expect((await runGuideShell("cat styleguide.md | wc -c")).exitCode).toBe(0);
+	});
+
+	test.each([
+		["while :; do :; done", /too many commands executed/],
+		["for i in {1..2000}; do :; done", /too many (commands|iterations)/],
+		["f() { f; }; f", /recursion depth/],
+	])("explains an execution limit the agent cannot raise: %s", async (command, detail) => {
+		const result = await runGuideShell(command);
+		expect(result.exitCode).toBe(126);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toMatch(detail);
+		expect(result.stderr).not.toMatch(/executionLimits|increase/);
+		expect(result.stderr).toMatch(/3 seconds/);
+		expect(result.stderr).toMatch(/grep/);
+		expect(result.stderr).toMatch(/smaller calls/);
+		expect((await runGuideShell("pwd")).stdout).toBe("/guide\n");
+	});
 });
 
 describe("exec WebMCP tool", () => {

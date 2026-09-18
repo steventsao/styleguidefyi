@@ -124,7 +124,19 @@
     },
     "expected": {
       "stdout": "",
-      "stderr": "bash: too many commands executed (>1000), increase executionLimits.maxCommandCount\n",
+      "stderr": "bash: too many commands executed (>1000)\nEach call stops after 1000 commands, 1000 loop iterations, 30 nested calls or 3 seconds, and these limits cannot be raised. Loops are rarely needed: grep -r, find and jq work across files in one command. Otherwise split the work into smaller calls.\n",
+      "exitCode": 126
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "explain the output limit",
+    "input": {
+      "command": "cat styleguide.md consensus.json index.json | wc -c"
+    },
+    "expected": {
+      "stdout": "",
+      "stderr": "bash: cat: output size limit exceeded (65536 bytes)\nThe 64 KiB output limit counts the output of every command in a pipeline, not only the final output. Read one file per call, run grep, jq, sed or awk on the file directly instead of piping cat into them, or narrow the output with head or a more specific path.\n",
       "exitCode": 126
     },
     "tool": "exec"
