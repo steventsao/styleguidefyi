@@ -85,12 +85,19 @@ export const styleguide: Styleguide = {
 				},
 				{
 					id: "rule-of-three",
-					title: "Abstract when the shared concept is clear.",
-					why: "Repetition is a signal to investigate, not a required count. Keep similar-looking code separate when it changes for different reasons. Share a known invariant, such as a permission check, as soon as independent copies could drift. An abstraction should give callers a clear contract without flags for unrelated cases.",
+					title: "Duplicate code before coupling unrelated concepts.",
+					why: "Similar syntax does not prove a shared responsibility. Keep copies when they change for different reasons; split an existing abstraction when each caller needs its own mode flags. Sandi Metz describes how preserving the wrong abstraction accumulates conditionals and makes change harder. The tradeoff is maintaining copies until the common contract becomes clear. Share a known invariant, such as a permission check, as soon as independent copies could drift. A third occurrence is a prompt to investigate, not a deadline to extract.",
 					avoid: `// One function, three flags, no caller uses the same combination.
 function formatName(user: User, short: boolean, forEmail: boolean, legacy: boolean) { /* ... */ }`,
 					prefer: `function displayName(user: User) { /* ... */ }
 function emailRecipient(user: User) { /* ... */ }`,
+					references: [
+						{
+							title: "The Wrong Abstraction",
+							by: "Sandi Metz, 2016",
+							url: "https://sandimetz.com/blog/2016/1/20/the-wrong-abstraction",
+						},
+					],
 				},
 				{
 					id: "no-speculative-code",
@@ -153,8 +160,38 @@ const maxUploadBytes = 5 * 1024 * 1024;`,
 			rules: [
 				{
 					id: "one-job",
-					title: "Give each function one coherent job.",
-					why: "Judge the job from the caller's point of view. Placing an order can include validation, persistence and notification under one clear contract. Extract a step when it has an independent responsibility or hides useful detail; splitting every step can scatter an operation across functions the reader must chase.",
+					title: "Keep a coherent function together, even when it is long.",
+					why: "A line limit is a poor reason to scatter one operation across helpers. Keep the steps together when readers need them together to understand the contract. Ousterhout's modular design notes allow long methods when decomposition would not be clean. Extract a step when its name and interface let callers forget its implementation, when it has an independent responsibility, or when it is reused. Length still deserves review: unrelated work and deeply nested branches are reasons to redesign, not excuses to keep growing.",
+					avoid: `function subtotalCents(lines: readonly Line[]): number {
+  return sumAmounts(lineAmounts(lines));
+}
+
+function lineAmounts(lines: readonly Line[]): number[] {
+  return lines.map(lineAmount);
+}
+
+function lineAmount(line: Line): number {
+  return line.unitPriceCents * line.quantity;
+}
+
+function sumAmounts(amounts: readonly number[]): number {
+  return amounts.reduce((sum, amount) => sum + amount, 0);
+}`,
+					prefer: `// Keep this calculation together when the helpers have no other callers.
+function subtotalCents(lines: readonly Line[]): number {
+  let subtotal = 0;
+  for (const line of lines) {
+    subtotal += line.unitPriceCents * line.quantity;
+  }
+  return subtotal;
+}`,
+					references: [
+						{
+							title: "Modular Design",
+							by: "John Ousterhout, Stanford CS 190, 2018",
+							url: "https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign",
+						},
+					],
 				},
 				{
 					id: "return-early",
@@ -255,8 +292,33 @@ async function applyDiscount(orderId: string) {
 				},
 				{
 					id: "immutable-by-default",
-					title: "Default to immutable.",
-					why: "`const`, `readonly` and new values instead of in-place edits. Code is easier to follow when a name means the same thing on every line.",
+					title: "Allow local mutation; keep shared values immutable by default.",
+					why: "Building a fresh collection with a loop can be clearer than copying the accumulator on every step. Repeatedly copying a growing collection can require quadratic work. Mutation confined to a fresh value that has not escaped does not change the caller's data; React's purity guide explicitly permits this. Prefer `const` bindings and read-only interfaces, but allow local updates while constructing the result. Do not mutate inputs, shared state, or nested objects borrowed from an input. A shallow copy does not give you ownership of its children.",
+					avoid: `function indexUsers(users: readonly User[]): ReadonlyMap<string, User> {
+  return users.reduce<ReadonlyMap<string, User>>(
+    (byId, user) => new Map(byId).set(user.id, user),
+    new Map<string, User>()
+  ); // copies every previous entry on each step
+}`,
+					prefer: `function indexUsers(users: readonly User[]): ReadonlyMap<string, User> {
+  const byId = new Map<string, User>();
+  for (const user of users) {
+    byId.set(user.id, user);
+  }
+  return byId; // the map is new; the user objects are left untouched
+}`,
+					references: [
+						{
+							title: "Keeping Components Pure",
+							by: "React documentation",
+							url: "https://react.dev/learn/keeping-components-pure#local-mutation-your-components-little-secret",
+						},
+						{
+							title: "Array.prototype.reduce()",
+							by: "MDN Web Docs",
+							url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce#when_to_not_use_reduce",
+						},
+					],
 				},
 				{
 					id: "no-magic-values",
@@ -589,8 +651,47 @@ retries += 1;`,
 				},
 				{
 					id: "fake-at-the-boundary",
-					title: "Fake the boundary, not your own code.",
-					why: "Replace the network, the clock, the file system and randomness. If you mock your own modules, you test the mocks, and the test stays green while production breaks.",
+					title: "Use real dependencies in tests when they are cheap and controlled.",
+					why: "A test can cross module boundaries and still give fast, useful feedback. Google's testing guidance prefers real implementations when they are fast, deterministic and simple to construct. A stubbed query result cannot establish that the SQL works; check database behavior against an isolated instance of the actual engine. Use fakes for expensive or uncontrolled dependencies, and stubs to trigger failures that are hard to reproduce. Control time and randomness when they affect the result. Keep tests independent, clean up their data, and verify important fake contracts against the real dependency.",
+					avoid: `db.query.mockResolvedValue({ rows: [{ id: "order-1" }] });
+expect(await findOrder(db, "order-1")).toEqual({ id: "order-1" });
+// This passes even if findOrder sends invalid SQL.`,
+					prefer: `// The fixture migrates an isolated test database and cleans it up.
+await withTestDatabase(async (db) => {
+  await db.query("INSERT INTO orders (id) VALUES ($1)", ["order-1"]);
+  expect(await findOrder(db, "order-1")).toEqual({ id: "order-1" });
+});`,
+					references: [
+						{
+							title: "Test Doubles",
+							by: "Andrew Trenk and Dillon Bly, Software Engineering at Google, 2020",
+							url: "https://abseil.io/resources/swe-book/html/ch13.html",
+						},
+					],
+				},
+				{
+					id: "coverage-is-not-a-quota",
+					title: "Reject blanket coverage quotas; test the risks that matter.",
+					why: "Coverage records execution, not whether assertions would catch a wrong result. Use uncovered paths to find missing checks, and prioritize consequential behavior, boundaries and failure cases. Google's coverage guidance rejects a universal target while supporting thresholds chosen for a team's risks. Do not add assertion-free tests or exclude awkward code just to hit a percentage. Keep an agreed coverage gate until the team deliberately changes it; this rule is not permission to bypass checks. High coverage can be valuable, but the number alone cannot establish confidence.",
+					avoid: `test("covers shipping", () => {
+  shippingCents(4_999);
+  shippingCents(5_000);
+}); // executes both paths without checking either price`,
+					prefer: `// Shipping is 500 cents below a 5,000-cent subtotal, then free.
+test.each([
+  [4_999, 500],
+  [5_000, 0],
+  [5_001, 0],
+])("shipping for %i cents costs %i cents", (subtotal, expected) => {
+  expect(shippingCents(subtotal)).toBe(expected);
+});`,
+					references: [
+						{
+							title: "Code Coverage Best Practices",
+							by: "Carlos Arguelles, Marko Ivanković and Adam Bender, Google Testing Blog, 2020",
+							url: "https://testing.googleblog.com/2020/08/code-coverage-best-practices.html",
+						},
+					],
 				},
 				{
 					id: "never-weaken-tests",
