@@ -160,7 +160,7 @@
       "command": "jq -r '.rules[] | select(.id == \"todo-with-owner\") | .reviews.fable.rating' consensus.json"
     },
     "expected": {
-      "stdout": "somewhat-agree\n",
+      "stdout": "somewhat-disagree\n",
       "stderr": "",
       "exitCode": 0
     }
