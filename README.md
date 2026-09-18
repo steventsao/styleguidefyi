@@ -37,7 +37,7 @@ The verifier saves full inputs and returned values to `.webmcp-results/latest.js
 
 ## Reviewer assessments
 
-The compatibility-style table shows individual positions, with a rationale behind each rating. It does not claim consensus on behalf of both reviewers. Only Astra's column is filled initially; Fable's entries remain `null` (Not rated). Not rated is distinct from a Neutral assessment.
+The compatibility-style table shows individual positions, with a rationale behind each rating. It does not claim consensus on behalf of both reviewers. Astra and Fable each filled their own column on 2026-09-17; each rating records the fingerprint of the wording it assessed, so a later edit shows as Needs review until that reviewer reassesses it. Not rated is distinct from a Neutral assessment.
 
 | Rating | Meaning |
 | --- | --- |

@@ -27,11 +27,18 @@ test("source changes invalidate a review, while another review does not", () => 
 	expect(ruleFingerprint({ ...rule, reviews: {} })).toBe(fingerprint);
 });
 
-test("the public consensus includes every rule and preserves the absence of a Fable vote", () => {
+test("the public consensus includes every rule with both reviewers' assessments", () => {
 	const data = consensusData(styleguide);
 	expect(data.rules.map(({ id }) => id)).toEqual(styleguide.sections.flatMap(({ rules }) => rules.map(({ id }) => id)));
 	const first = data.rules[0];
 	expect(first.reviews.astra).toMatchObject({ rating: "strongly-agree", status: "current" });
-	expect(first.reviews.fable).toBeNull();
+	expect(first.reviews.fable).toMatchObject({ rating: "strongly-agree", status: "current" });
 	expect(JSON.parse(JSON.stringify(data))).toEqual(data);
+});
+
+test("the public consensus preserves an absent vote as null", () => {
+	const unrated = { ...rule, reviews: { astra: rule.reviews!.astra, fable: null } };
+	const guide = { ...styleguide, sections: [{ ...styleguide.sections[0], rules: [unrated] }] };
+
+	expect(consensusData(guide).rules[0].reviews.fable).toBeNull();
 });
