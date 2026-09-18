@@ -64,8 +64,10 @@ const shellExamples = [
 				{
 					styleguide.sections.map((section) => (
 						<li>
-							<a href={`#${section.id}`}>{section.title}</a>
-							<span class="toc-count">{section.rules.length}</span>
+							<a href={`#${section.id}`}>
+								<span>{section.title}</span>
+								<span class="toc-count">{section.rules.length}</span>
+							</a>
 						</li>
 					))
 				}
@@ -193,7 +195,7 @@ const shellExamples = [
 							<div class="shell-examples">
 								{shellExamples.map((example) => <button type="button" class="button" data-shell-command={example.command}>{example.label}</button>)}
 							</div>
-							<p class="tool-description">Up to 3 seconds of execution and 64 KiB of output per call. Use <code>head</code> or a specific path to narrow results.</p>
+							<p class="tool-description">Up to 3 seconds of execution and 64 KiB of output per call, counted across every command in a pipeline. Use <code>head</code> or a specific path to narrow results.</p>
 							<pre class="tool-output" aria-live="polite" hidden />
 						</form>
 					</li>
@@ -310,14 +312,13 @@ const shellExamples = [
 		font-size: 0.875rem;
 	}
 
-	.toc li {
+	/* The whole row is the link, so the count and the space between are clickable too. */
+	.toc a {
 		display: flex;
 		justify-content: space-between;
+		align-items: baseline;
 		gap: 8px;
 		padding: 5px 0;
-	}
-
-	.toc a {
 		color: var(--text-secondary);
 		text-decoration: none;
 	}
