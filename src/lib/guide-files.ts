@@ -1,5 +1,6 @@
 import type { Styleguide } from "../data/styleguide";
 import { ruleToMarkdown, ruleUrl, sectionToMarkdown, styleguideToMarkdown } from "./styleguide";
+import { consensusData } from "./consensus";
 
 /** Public guide content only. No repository files or host environment are mounted. */
 export function guideFiles(guide: Styleguide): Record<string, string> {
@@ -11,6 +12,7 @@ Each call starts a fresh shell at /guide. Network and external programs are unav
 
 - styleguide.md: the complete guide
 - index.json: section and rule metadata, virtual paths and public URLs
+- consensus.json: Astra and Fable ratings and rationales; null means not rated, and outdated reviews need reassessment
 - sections/<section-id>.md: one section
 - rules/<rule-id>.md: one rule, its rationale and examples
 
@@ -25,6 +27,7 @@ Use pipes, glob patterns and text commands to select the passages you need.
 No command history is persisted by this page. Results are returned to the calling agent.
 `,
 		"/guide/styleguide.md": styleguideToMarkdown(guide),
+		"/guide/consensus.json": JSON.stringify(consensusData(guide), null, 2) + "\n",
 		"/guide/index.json": JSON.stringify({
 			title: guide.title,
 			updated: guide.updated,

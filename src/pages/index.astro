@@ -1,6 +1,7 @@
 ---
 import { Code } from "astro:components";
 import Base from "../layouts/Base.astro";
+import ConsensusTable from "../components/ConsensusTable.astro";
 import { styleguide } from "../data/styleguide";
 import { countRules } from "../lib/styleguide";
 import { createTools, shellToolMetadata } from "../lib/webmcp-tools";
@@ -45,11 +46,13 @@ const shellExamples = [
 		<h1>Coding style guide.</h1>
 		{styleguide.intro && <p class="lede">{styleguide.intro}</p>}
 		<div class="hero-actions">
+			<a class="button" href="#consensus">Astra × Fable ratings</a>
 			<button type="button" class="button button-primary" id="copy-markdown">Copy as markdown</button>
 			<a class="button" href="/styleguide.md">styleguide.md</a>
 			<a class="button" href="#webmcp">WebMCP tools</a>
 		</div>
 	</section>
+	<ConsensusTable />
 
 	<div class="layout" id="rules">
 		<aside class="sidebar" aria-label="Sections">

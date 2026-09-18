@@ -1,0 +1,162 @@
+---
+import { styleguide } from "../data/styleguide";
+import { AGREEMENT_LABELS, REVIEWERS, reviewStatus } from "../lib/consensus";
+
+const rules = styleguide.sections.flatMap(({ rules }) => rules);
+const counts = Object.fromEntries(REVIEWERS.map(({ id }) => [id, rules.filter(rule => reviewStatus(rule, rule.reviews?.[id]) === "current").length]));
+---
+
+<section class="consensus" id="consensus" aria-labelledby="consensus-title">
+	<div class="consensus-heading">
+		<div>
+			<p class="eyebrow">Astra × Fable</p>
+			<h2 id="consensus-title">Rule consensus</h2>
+		</div>
+		<a class="data-link" href="/consensus.json">Ratings as JSON ↗</a>
+	</div>
+	<p class="explanation">Individual assessments of the rule’s wording. Open a rating for the rationale. “Not rated” is separate from “Neutral.”</p>
+	<ul class="coverage" aria-label="Review coverage">
+		{REVIEWERS.map(({ id, name }) => <li><strong>{name}</strong> <span>{counts[id]} / {rules.length} reviewed</span></li>)}
+	</ul>
+	<div class="legend" aria-label="Agreement scale">
+		{Object.entries(AGREEMENT_LABELS).map(([rating, label]) => <span class="rating" data-rating={rating}>{label}</span>)}
+	</div>
+	<div class="consensus-filters">
+		<label>
+			<span>Find a rule</span>
+			<input id="consensus-search" type="search" placeholder="Search rules or rationale…" autocomplete="off" />
+		</label>
+		<label>
+			<span>Astra’s rating</span>
+			<select id="consensus-rating">
+				<option value="all">All ratings</option>
+				{Object.entries(AGREEMENT_LABELS).map(([rating, label]) => <option value={rating}>{label}</option>)}
+				<option value="outdated">Needs review</option>
+				<option value="unrated">Not rated</option>
+			</select>
+		</label>
+		<p id="consensus-count" aria-live="polite">{rules.length} rules</p>
+	</div>
+	<div class="table-scroll" tabindex="0" role="region" aria-label="Rule agreement table">
+		<table>
+			<caption>Agreement by rule and reviewer. Ratings describe an assessment, not an established consensus.</caption>
+			<colgroup><col class="rule-column" /><col /><col /></colgroup>
+			<thead><tr><th scope="col">Rule</th>{REVIEWERS.map(({ name }) => <th scope="col">{name}</th>)}</tr></thead>
+			{styleguide.sections.map(section => (
+				<tbody data-consensus-section>
+					<tr class="group-row"><th colspan="3" scope="rowgroup">{section.title}</th></tr>
+					{section.rules.map(rule => {
+						const astraStatus = reviewStatus(rule, rule.reviews?.astra);
+						const rating = astraStatus === "current" ? rule.reviews!.astra!.rating : astraStatus;
+						const search = [section.title, rule.title, rule.id, ...REVIEWERS.map(({ id }) => rule.reviews?.[id]?.rationale ?? "")].join(" ").toLowerCase();
+						return (
+							<tr data-consensus-rule={rule.id} data-astra-rating={rating} data-search={search}>
+								<th scope="row"><a href={`#${rule.id}`}>{rule.title.replaceAll("`", "")}</a></th>
+								{REVIEWERS.map(({ id, name }) => {
+									const review = rule.reviews?.[id];
+									const status = reviewStatus(rule, review);
+									return (
+										<td data-reviewer={id}>
+											{review ? (
+												<details>
+													<summary class="rating" data-rating={status === "outdated" ? "outdated" : review.rating} aria-label={`${name}: ${status === "outdated" ? "Needs review" : AGREEMENT_LABELS[review.rating]}. Read rationale for ${rule.title}`}>
+														<span>{status === "outdated" ? "Needs review" : AGREEMENT_LABELS[review.rating]}</span><span aria-hidden="true" class="disclosure">⌄</span>
+													</summary>
+													<div class="rationale">
+														{status === "outdated" && <p class="stale-note">The wording changed. Previous rating: {AGREEMENT_LABELS[review.rating]}.</p>}
+														<p>{review.rationale}</p>
+														<p class="review-date">Reviewed <time datetime={review.reviewedAt}>{review.reviewedAt}</time></p>
+													</div>
+												</details>
+											) : <span class="rating" data-rating="unrated">Not rated</span>}
+										</td>
+									);
+								})}
+							</tr>
+						);
+					})}
+				</tbody>
+			))}
+		</table>
+		<p id="consensus-empty" hidden>No rules match these filters.</p>
+	</div>
+</section>
+
+<script>
+	const search = document.querySelector<HTMLInputElement>("#consensus-search")!;
+	const rating = document.querySelector<HTMLSelectElement>("#consensus-rating")!;
+	const rows = [...document.querySelectorAll<HTMLTableRowElement>("[data-consensus-rule]")];
+	function filterConsensus() {
+		const words = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+		let visible = 0;
+		for (const row of rows) {
+			row.hidden = (rating.value !== "all" && row.dataset.astraRating !== rating.value) || !words.every(word => row.dataset.search!.includes(word));
+			if (!row.hidden) visible++;
+		}
+		for (const section of document.querySelectorAll<HTMLElement>("[data-consensus-section]")) section.hidden = !section.querySelector("[data-consensus-rule]:not([hidden])");
+		document.querySelector("#consensus-count")!.textContent = `${visible} of ${rows.length} rules`;
+		document.querySelector<HTMLElement>("#consensus-empty")!.hidden = visible > 0;
+	}
+	search.addEventListener("input", filterConsensus);
+	rating.addEventListener("change", filterConsensus);
+</script>
+
+<style>
+	.consensus { max-width: var(--page-width); margin: 0 auto; padding: 0 16px 48px; }
+	.consensus-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+	.eyebrow { margin: 0 0 4px; color: var(--accent); font: 0.75rem var(--font-mono); }
+	h2 { margin: 0; font-size: 1.75rem; line-height: 1.2; font-weight: 600; letter-spacing: -0.025em; }
+	.data-link { font-size: 0.8125rem; white-space: nowrap; }
+	.explanation { max-width: 760px; color: var(--text-secondary); margin: 14px 0; font-size: 0.9375rem; }
+	.coverage { display: flex; flex-wrap: wrap; gap: 12px 28px; list-style: none; padding: 0; margin: 18px 0; font-size: 0.8125rem; }
+	.coverage strong { margin-right: 8px; font-weight: 600; }
+	.coverage span { color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.75rem; }
+	.legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 24px; }
+	.rating { --tone: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 9px 10px; border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--border)); border-radius: 4px; background: color-mix(in srgb, var(--tone) 10%, var(--bg-raised)); color: var(--tone); font-size: 0.8125rem; line-height: 1.35; font-weight: 500; }
+	.rating[data-rating="strongly-agree"] { --tone: var(--prefer); background: color-mix(in srgb, var(--tone) 20%, var(--bg-raised)); }
+	.rating[data-rating="somewhat-agree"] { --tone: var(--prefer); }
+	.rating[data-rating="somewhat-disagree"] { --tone: var(--accent); }
+	.rating[data-rating="strongly-disagree"] { --tone: var(--avoid); background: color-mix(in srgb, var(--tone) 18%, var(--bg-raised)); }
+	.rating[data-rating="unrated"], .rating[data-rating="outdated"] { border-style: dashed; background: transparent; }
+	.legend .rating { font-size: 0.6875rem; padding: 5px 8px; }
+	.consensus-filters { display: flex; gap: 12px; align-items: end; margin-bottom: 12px; }
+	.consensus-filters label:first-child { flex: 1; }
+	.consensus-filters label { display: grid; gap: 5px; font-size: 0.75rem; color: var(--text-secondary); }
+	input, select { min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-raised); color: var(--text); font: 0.875rem var(--font-sans); }
+	#consensus-count { margin: 0 0 10px; min-width: 108px; color: var(--text-secondary); font: 0.75rem var(--font-mono); text-align: right; }
+	.table-scroll { max-height: 660px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); scroll-padding-top: 50px; }
+	table { width: 100%; table-layout: fixed; border-spacing: 0; border-collapse: separate; font-size: 0.875rem; }
+	.rule-column { width: 56%; }
+	caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+	thead th { position: sticky; top: 0; z-index: 2; background: var(--bg-raised); font-family: var(--font-mono); font-size: 0.75rem; }
+	th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+	thead th + th, td { border-left: 1px solid var(--border); }
+	tbody th[scope="row"] { font-weight: 400; padding-top: 17px; }
+	tbody th a { text-decoration: none; }
+	tbody th a:hover { text-decoration: underline; }
+	.group-row th { font-size: 0.6875rem; letter-spacing: 0.045em; text-transform: uppercase; padding: 10px 14px; color: var(--text-secondary); background: var(--code-bg); }
+	tbody tr:not(.group-row):hover { background: color-mix(in srgb, var(--accent) 3%, var(--bg)); }
+	summary { list-style: none; cursor: pointer; }
+	summary::-webkit-details-marker { display: none; }
+	.disclosure { font-size: 0.75rem; }
+	details[open] .disclosure { transform: rotate(180deg); }
+	.rationale { font-size: 0.75rem; line-height: 1.6; overflow-wrap: anywhere; color: var(--text-secondary); }
+	.rationale p { margin: 10px 0 0; }
+	.review-date { font-size: 0.6875rem; }
+	.stale-note { color: var(--accent); }
+	#consensus-empty { text-align: center; color: var(--text-secondary); padding: 20px; }
+	@media (max-width: 640px) {
+		.consensus-heading { align-items: center; gap: 12px; }
+		h2 { font-size: 1.5rem; }
+		.data-link { font-size: 0.6875rem; }
+		.consensus-filters { flex-wrap: wrap; }
+		.consensus-filters label:first-child { flex-basis: 100%; }
+		.consensus-filters label:nth-child(2) { flex: 1; }
+		.rule-column { width: 43%; }
+		th, td { padding: 8px 6px; }
+		tbody th[scope="row"] { padding: 13px 8px; font-size: 0.75rem; }
+		.rating { padding: 7px 6px; font-size: 0.6875rem; }
+		.group-row th { padding: 9px 8px; }
+		.table-scroll { max-height: 70vh; }
+	}
+</style>

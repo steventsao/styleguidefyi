@@ -138,6 +138,7 @@ export const shellToolMetadata = {
 		"Each call starts at /guide. Start with `ls /guide` or `cat /guide/README.md`. " +
 		"Read the whole guide at /guide/styleguide.md, sections at /guide/sections/<id>.md, " +
 		"individual rules at /guide/rules/<id>.md, and paths/titles/URLs in /guide/index.json. " +
+		"Read reviewer ratings and rationales at /guide/consensus.json; null means not rated. " +
 		"Use ls, cat, find, tree, grep, rg, head, tail, wc, sort, uniq, cut, tr, sed, awk, jq and pipes. " +
 		"No writes, network or external programs. No state persists between calls. " +
 		"Returns {stdout, stderr, exitCode}; a nonzero exitCode indicates a command error. " +
