@@ -1,6 +1,7 @@
 import { styleguide } from "../data/styleguide";
 import { countRules, searchRules, styleguideToMarkdown } from "../lib/styleguide";
 import { createTools, type PageActions, type WebMcpTool } from "../lib/webmcp-tools";
+import { runShell } from "./shell-client";
 
 interface ModelContext {
 	registerTool(tool: WebMcpTool): Promise<void> | void;
@@ -57,7 +58,7 @@ const page: PageActions = {
 	},
 };
 
-const tools = createTools(styleguide, page);
+const tools = createTools(styleguide, page, runShell);
 
 filterInput.addEventListener("input", () => applyFilter(filterInput.value));
 
@@ -87,14 +88,14 @@ async function registerTools() {
 		setStatus("failed", `WebMCP is present, but ${failures.length} of ${tools.length} tools did not register. See the console.`);
 		return;
 	}
-	setStatus("active", `WebMCP is active. ${tools.length} tools are registered on this page.`);
+	setStatus("active", `WebMCP is active. ${tools.length} tools are registered, including exec.`);
 }
 
 registerTools();
 
-// --- Run buttons: the same `execute` an agent calls, but the page stays where the reader is ---
+// --- Run forms use the same tool implementations without scrolling or filtering the page ---
 
-const previewTools = createTools(styleguide, { revealSection() {}, filterRules() {} });
+const previewTools = createTools(styleguide, { revealSection() {}, filterRules() {} }, runShell);
 
 for (const form of document.querySelectorAll<HTMLFormElement>("form[data-tool]")) {
 	const tool = previewTools.find((candidate) => candidate.name === form.dataset.tool)!;
@@ -102,10 +103,27 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-tool]")
 
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
-		const input = Object.fromEntries(new FormData(form));
-		const result = await tool.execute(input);
-		output.textContent = typeof result === "string" ? result : JSON.stringify(result, null, 2);
+		const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+		button.disabled = true;
+		button.textContent = "Running…";
 		output.hidden = false;
+		output.textContent = "Running in the browser…";
+		try {
+			const input = Object.fromEntries(new FormData(form));
+			const result = await tool.execute(input);
+			output.textContent = typeof result === "string" ? result : JSON.stringify(result, null, 2);
+		} finally {
+			button.disabled = false;
+			button.textContent = "Run";
+		}
+	});
+}
+
+for (const button of document.querySelectorAll<HTMLButtonElement>("[data-shell-command]")) {
+	button.addEventListener("click", () => {
+		const command = document.querySelector<HTMLTextAreaElement>('textarea[name="command"]')!;
+		command.value = button.dataset.shellCommand!;
+		command.focus();
 	});
 }
 

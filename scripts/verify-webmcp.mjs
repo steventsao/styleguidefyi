@@ -2,25 +2,30 @@
 // starts headless Chrome with WebMCP enabled, lists the tools with `document.modelContext.getTools()`
 // and calls each one with `executeTool()`, the way an agent does.
 //
-//   node scripts/verify-webmcp.mjs [url]
+//   node scripts/verify-webmcp.mjs [url] [--output path/to/results.json]
 //
 // Needs Node 22+ (global WebSocket) and Google Chrome 149+.
 
 import { spawn } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { parseArgs } from "node:util";
+import { assertWebMcpReport } from "./webmcp-results.mjs";
 
-const url = process.argv[2] ?? "https://styleguide.fyi/";
+const { values, positionals } = parseArgs({
+	options: { output: { type: "string", default: ".webmcp-results/latest.json" } },
+	allowPositionals: true,
+});
+if (positionals.length > 1) throw new Error("Usage: node scripts/verify-webmcp.mjs [url] [--output path]");
+const url = positionals[0] ?? "https://styleguide.fyi/";
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const REGISTRATION_WAIT_MS = 1500;
 
-const SAMPLE_INPUTS = {
-	"list-sections": {},
-	"get-section": { section: "errors" },
-	"search-rules": { query: "swallow" },
-	"get-styleguide": {},
-};
+const CASES = [
+	...JSON.parse(await readFile(new URL("./fixtures/exec-cases.json", import.meta.url), "utf8")),
+	...JSON.parse(await readFile(new URL("./fixtures/guide-tool-cases.json", import.meta.url), "utf8")),
+];
 
 const userDataDir = await mkdtemp(join(tmpdir(), "verify-webmcp-"));
 const chrome = spawn(CHROME, [
@@ -82,7 +87,7 @@ function waitForEvent(method) {
 }
 
 // Runs in the page.
-async function inspectPage(sampleInputs) {
+async function inspectPage(cases) {
 	const modelContext = document.modelContext ?? navigator.modelContext;
 	const entryPoint = document.modelContext ? "document.modelContext" : navigator.modelContext ? "navigator.modelContext" : null;
 	const pageStatus = document.querySelector("#webmcp-status")?.textContent ?? null;
@@ -90,39 +95,28 @@ async function inspectPage(sampleInputs) {
 
 	const registered = await modelContext.getTools();
 	const calls = [];
-	for (const tool of registered) {
+	for (const test of cases) {
 		try {
-			const input = sampleInputs[tool.name] ?? {};
+			const tool = registered.find((candidate) => candidate.name === test.tool);
+			if (!tool) throw new Error(`Tool ${test.tool} is not registered`);
 			let result;
-			let inputFormat = "object";
 			try {
-				result = await modelContext.executeTool(tool, input);
+				result = await modelContext.executeTool(tool, test.input);
 			} catch (error) {
-				// The spec takes an object. Chrome builds before that change take a JSON string.
+				// Earlier Chrome builds expect JSON strings instead of objects.
 				if (!String(error).includes("parse input")) throw error;
-				inputFormat = "JSON string";
-				result = await modelContext.executeTool(tool, JSON.stringify(input));
+				result = await modelContext.executeTool(tool, JSON.stringify(test.input));
 			}
-			calls.push({ name: tool.name, ok: true, result, inputFormat });
+			if (typeof result === "string") {
+				try { result = JSON.parse(result); }
+				catch { /* A markdown result may already be a decoded string. */ }
+			}
+			calls.push({ label: test.label, tool: test.tool, input: test.input, result });
 		} catch (error) {
-			calls.push({ name: tool.name, ok: false, error: String(error) });
+			calls.push({ label: test.label, tool: test.tool, input: test.input, error: String(error) });
 		}
 	}
-
-	return {
-		entryPoint,
-		pageStatus,
-		tools: registered.map(({ name, title, description, inputSchema, annotations, origin }) => ({
-			name,
-			title,
-			description,
-			inputSchema,
-			annotations,
-			origin,
-		})),
-		calls,
-		filterAfterCalls: document.querySelector("#rule-filter")?.value ?? null,
-	};
+	return { entryPoint, pageStatus, tools: registered.map(({ name }) => name), calls };
 }
 
 let exitCode = 0;
@@ -139,7 +133,7 @@ try {
 	const evaluation = await send(
 		"Runtime.evaluate",
 		{
-			expression: `(${inspectPage})(${JSON.stringify(SAMPLE_INPUTS)})`,
+			expression: `(${inspectPage})(${JSON.stringify(CASES.map(({ label, tool, input }) => ({ label, tool, input })))})`,
 			awaitPromise: true,
 			returnByValue: true,
 		},
@@ -150,28 +144,17 @@ try {
 	}
 
 	const report = evaluation.result.value;
+	// Save full responses even when assertions fail. Expectations stay in a separate file.
+	await mkdir(dirname(values.output), { recursive: true });
+	await writeFile(values.output, JSON.stringify({ url, ...report }, null, 2) + "\n");
 	console.log(`URL:         ${url}`);
+	console.log(`Captured:    ${values.output}`);
 	console.log(`Entry point: ${report.entryPoint ?? "none (WebMCP is not exposed in this Chrome)"}`);
 	console.log(`Page status: ${report.pageStatus}`);
-	console.log(`Tools:       ${report.tools.map((tool) => tool.name).join(", ") || "none"}\n`);
-
-	for (const call of report.calls) {
-		const preview = call.ok ? String(call.result).slice(0, 300).replace(/\n/g, "\\n") : call.error;
-		const format = call.ok ? `  [input as ${call.inputFormat}]` : "";
-		console.log(`${call.ok ? "PASS" : "FAIL"}  ${call.name}(${JSON.stringify(SAMPLE_INPUTS[call.name] ?? {})})${format}`);
-		console.log(`      ${preview}${call.ok && String(call.result).length > 300 ? "…" : ""}\n`);
-	}
-	if (report.calls.length > 0) console.log(`Filter box after the calls: ${JSON.stringify(report.filterAfterCalls)}`);
-
-	const expected = Object.keys(SAMPLE_INPUTS);
-	const missing = expected.filter((name) => !report.tools.some((tool) => tool.name === name));
-	const failed = report.calls.filter((call) => !call.ok);
-	if (missing.length > 0 || failed.length > 0) {
-		console.error(`\nFAILED. Missing tools: ${missing.join(", ") || "none"}. Failed calls: ${failed.map((call) => call.name).join(", ") || "none"}.`);
-		exitCode = 1;
-	} else {
-		console.log("\nAll tools are registered and callable.");
-	}
+	console.log(`Tools:       ${report.tools.join(", ") || "none"}\n`);
+	assertWebMcpReport(report, CASES);
+	for (const call of report.calls) console.log(`PASS  ${call.label} (exact result)`);
+	console.log(`\nAll five tools are registered; all ${CASES.length} captured results match the reviewed fixtures.`);
 } catch (error) {
 	console.error(error);
 	exitCode = 1;

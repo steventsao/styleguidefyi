@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { styleguide } from "../data/styleguide";
 import { countRules, ruleToMarkdown, searchRules, styleguideToMarkdown } from "./styleguide";
 import { createTools, type PageActions } from "./webmcp-tools";
+import cases from "../../scripts/fixtures/guide-tool-cases.json";
 
 function setup() {
 	const page: PageActions = { revealSection: vi.fn(), filterRules: vi.fn() };
@@ -75,6 +76,11 @@ describe("styleguideToMarkdown", () => {
 });
 
 describe("WebMCP tools", () => {
+	test.each(cases)("$label", async ({ tool, input, expected }) => {
+		const { run } = setup();
+		expect(await run(tool, input)).toStrictEqual(expected);
+	});
+
 	test("tool names are valid WebMCP names and every tool is read-only", () => {
 		const { tools } = setup();
 

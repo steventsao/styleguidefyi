@@ -3,12 +3,11 @@ import { Code } from "astro:components";
 import Base from "../layouts/Base.astro";
 import { styleguide } from "../data/styleguide";
 import { countRules } from "../lib/styleguide";
-import { createTools } from "../lib/webmcp-tools";
+import { createTools, shellToolMetadata } from "../lib/webmcp-tools";
 
 const ruleCount = countRules(styleguide);
-
-// Only the tool metadata is rendered here; the page actions run in the browser.
-const tools = createTools(styleguide, { revealSection() {}, filterRules() {} });
+// Metadata for the original four tools; page actions are wired in the browser.
+const guideTools = createTools(styleguide, { revealSection() {}, filterRules() {} });
 
 const CODE_THEMES = { light: "github-light", dark: "github-dark" } as const;
 
@@ -21,19 +20,20 @@ function inlineCode(text: string): string {
 	return escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 
-const registrationExample = `const modelContext = document.modelContext ?? navigator.modelContext;
+const registrationExample = `import { createShellTool } from "./webmcp-tools";
+import { runShell } from "./shell-client";
 
-await modelContext?.registerTool({
-  name: "search-rules",
-  description: "Find style guide rules by keyword...",
-  inputSchema: {
-    type: "object",
-    properties: { query: { type: "string" } },
-    required: ["query"],
-  },
-  annotations: { readOnlyHint: true },
-  execute: async ({ query }) => searchRules(styleguide, query),
-});`;
+const modelContext = document.modelContext ?? navigator.modelContext;
+await modelContext?.registerTool(createShellTool(runShell));
+
+// Agent input: { command: "ls /guide && cat /guide/sections/errors.md" }
+// Result: { stdout: "...", stderr: "", exitCode: 0 }`;
+const shellExamples = [
+	{ label: "List files", command: "ls /guide && ls /guide/sections" },
+	{ label: "Read errors", command: "cat sections/errors.md" },
+	{ label: "Search rules", command: "grep -n -i 'permission' rules/*.md" },
+	{ label: "Query index", command: "jq '.sections[] | {id, rules: (.rules | length)}' index.json" },
+];
 ---
 
 <Base
@@ -134,15 +134,21 @@ await modelContext?.registerTool({
 
 				<h3>2. WebMCP, for a browser agent</h3>
 				<p>
-					This page registers {tools.length} read-only tools with
+					This page registers five read-only tools with
 					<a href="https://webmachinelearning.github.io/webmcp/">WebMCP</a>. An agent that runs in the browser
-					calls them as functions and gets structured results, with no scraping of this page.
+					can list sections, read a section, search rules, or read the whole guide. The additional <code>exec</code> tool
+					uses <code>ls</code>, <code>cat</code>, <code>grep</code> and pipes for custom queries over a virtual copy of the guide.
 				</p>
 				<p class="webmcp-status" id="webmcp-status" data-state="checking">Checking this browser for WebMCP…</p>
 
+				<p>
+					Start at <code>/guide</code>: the full guide is <code>styleguide.md</code>, with individual
+					files under <code>sections/</code> and <code>rules/</code>. <code>index.json</code> maps titles to paths and URLs.
+					Files are read-only. Each call starts fresh; commands run in this browser with network access disabled.
+				</p>
 				<ul class="tools">
 					{
-						tools.map((tool) => {
+						guideTools.map((tool) => {
 							const properties = (tool.inputSchema.properties ?? {}) as Record<
 								string,
 								{ enum?: string[]; description?: string }
@@ -174,6 +180,21 @@ await modelContext?.registerTool({
 							);
 						})
 					}
+
+					<li class="tool">
+						<form data-tool={shellToolMetadata.name}>
+							<div class="tool-head">
+								<label for="shell-command"><code class="tool-name">exec</code></label>
+								<button type="submit" class="button">Run</button>
+							</div>
+							<textarea id="shell-command" name="command" aria-label="Shell command" rows="4" maxlength="4096" spellcheck="false" required>{"ls /guide\ncat /guide/README.md"}</textarea>
+							<div class="shell-examples">
+								{shellExamples.map((example) => <button type="button" class="button" data-shell-command={example.command}>{example.label}</button>)}
+							</div>
+							<p class="tool-description">Up to 3 seconds of execution and 64 KiB of output per call. Use <code>head</code> or a specific path to narrow results.</p>
+							<pre class="tool-output" aria-live="polite" hidden />
+						</form>
+					</li>
 				</ul>
 				<p class="hint">
 					Run calls the same function an agent calls and shows the exact result. To try it with a real
@@ -530,7 +551,8 @@ await modelContext?.registerTool({
 	}
 
 	.tool-inputs input,
-	.tool-inputs select {
+	.tool-inputs select,
+	.tool textarea {
 		padding: 7px 10px;
 		font: inherit;
 		font-size: 0.875rem;
@@ -539,6 +561,23 @@ await modelContext?.registerTool({
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 	}
+
+	.tool textarea {
+		width: 100%;
+		margin-top: 12px;
+		resize: vertical;
+		font-family: var(--font-mono);
+	}
+
+	.shell-examples {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 10px;
+	}
+
+	.shell-examples .button { font-size: 0.75rem; }
+	.button:disabled { opacity: 0.6; cursor: wait; }
 
 	.tool .tool-description {
 		margin: 8px 0 0;

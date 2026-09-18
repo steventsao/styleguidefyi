@@ -1,8 +1,14 @@
 import { defineConfig, fontProviders } from "astro/config";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
 	site: "https://styleguide.fyi",
 	output: "static",
+	vite: {
+		resolve: {
+			alias: { "node:zlib": fileURLToPath(new URL("./src/lib/browser-compression.ts", import.meta.url)) },
+		},
+	},
 	fonts: [
 		{
 			provider: fontProviders.google(),

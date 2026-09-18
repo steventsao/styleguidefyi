@@ -1,0 +1,144 @@
+[
+  {
+    "label": "list virtual files",
+    "input": {
+      "command": "ls /guide && ls /guide/sections"
+    },
+    "expected": {
+      "stdout": "README.md\nindex.json\nrules\nsections\nstyleguide.md\nagents.md\ncomments.md\ncommits.md\nconcurrency.md\nerrors.md\nfunctions.md\nnaming.md\nread-first.md\nscope.md\nstructure.md\ntests.md\ntypes-and-data.md\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "read a section",
+    "input": {
+      "command": "cat sections/errors.md"
+    },
+    "expected": {
+      "stdout": "## Errors\n\n### Never swallow an error.\n\nAn empty `catch` is a bug on a timer. If you truly mean to ignore an error, catch that specific error and write down why.\n\nAvoid:\n\n```ts\ntry {\n  await syncInventory();\n} catch {}\n```\n\nPrefer:\n\n```ts\ntry {\n  await syncInventory();\n} catch (error) {\n  if (!(error instanceof NotFoundError)) throw error;\n  // The warehouse was deleted between scheduling and sync. Nothing to do.\n}\n```\n\n### Fail fast and loudly on states that must not happen.\n\nThrow at the point of detection. Code that limps on with a default moves the crash far away from the cause and corrupts data on the way.\n\n### Do not hide a failure behind a fallback.\n\n`catch { return [] }` makes an outage look like an empty list. A default is for input that is optional, not for an operation that failed.\n\nAvoid:\n\n```ts\nasync function listInvoices() {\n  try {\n    return await api.get(\"/invoices\");\n  } catch {\n    return []; // the user sees \"No invoices\" during an outage\n  }\n}\n```\n\nPrefer:\n\n```ts\nasync function listInvoices() {\n  return await api.get(\"/invoices\"); // let the caller show an error state\n}\n```\n\n### Catch an error only where you can do something about it.\n\nRetry it, translate it, or show it to the user. If you can do none of these at this layer, let it propagate. Catch-log-rethrow at every level only multiplies the log lines.\n\n### Write error messages that say what happened, with which value, and what to do next.\n\nThe reader of the message is on call, has no debugger attached, and has never seen this code.\n\nAvoid:\n\n```ts\nthrow new Error(\"Invalid input\");\n```\n\nPrefer:\n\n```ts\nthrow new Error(\n  `Unknown currency \"${code}\". Expected one of: ${SUPPORTED_CURRENCIES.join(\", \")}.`\n);\n```\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "search with glob and pipe",
+    "input": {
+      "command": "grep -l 'permission' rules/*.md | sort"
+    },
+    "expected": {
+      "stdout": "rules/parse-at-the-boundary.md\nrules/rule-of-three.md\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "query the JSON index",
+    "input": {
+      "command": "jq '.sections[] | select(.id == \"errors\") | .rules[0].id' index.json"
+    },
+    "expected": {
+      "stdout": "\"never-swallow\"\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "count sections and rules",
+    "input": {
+      "command": "jq '{sections: (.sections | length), rules: ([.sections[].rules[]] | length)}' index.json"
+    },
+    "expected": {
+      "stdout": "{\n  \"sections\": 12,\n  \"rules\": 59\n}\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "preserve Unicode and newlines",
+    "input": {
+      "command": "printf 'café ∑ 🙂\\n'"
+    },
+    "expected": {
+      "stdout": "café ∑ 🙂\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "reject missing command",
+    "input": {},
+    "expected": {
+      "stdout": "",
+      "stderr": "Provide a non-empty \"command\" of at most 4096 characters, for example \"ls /guide\".\n",
+      "exitCode": 2
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "reject writes",
+    "input": {
+      "command": "echo replaced > rules/never-swallow.md"
+    },
+    "expected": {
+      "stdout": "",
+      "stderr": "EROFS: guide filesystem is read-only\n",
+      "exitCode": 1
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "preserve guide after rejected write",
+    "input": {
+      "command": "head -1 rules/never-swallow.md"
+    },
+    "expected": {
+      "stdout": "### Never swallow an error.\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "disable network commands",
+    "input": {
+      "command": "curl https://example.com"
+    },
+    "expected": {
+      "stdout": "",
+      "stderr": "bash: curl: command not found\n",
+      "exitCode": 127
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "bound an infinite loop",
+    "input": {
+      "command": "while :; do :; done"
+    },
+    "expected": {
+      "stdout": "",
+      "stderr": "bash: too many commands executed (>1000), increase executionLimits.maxCommandCount\n",
+      "exitCode": 126
+    },
+    "tool": "exec"
+  },
+  {
+    "label": "recover after limit",
+    "input": {
+      "command": "pwd"
+    },
+    "expected": {
+      "stdout": "/guide\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    "tool": "exec"
+  }
+]

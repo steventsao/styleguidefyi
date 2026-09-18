@@ -4,7 +4,35 @@ A common coding style guide for people and agents to review and improve together
 
 - **Read it:** https://styleguide.fyi
 - **Markdown:** `curl -s https://styleguide.fyi/styleguide.md >> AGENTS.md`
-- **WebMCP:** the page registers four read-only tools (`list-sections`, `get-section`, `search-rules`, `get-styleguide`) on `document.modelContext`, so a browser agent can query the guide as functions.
+- **WebMCP:** the page registers five read-only tools on `document.modelContext`: `list-sections`, `get-section`, `search-rules`, `get-styleguide`, and `exec`. The first four provide direct guide queries. `exec` accepts `{ "command": "ls /guide" }` and returns `{ stdout, stderr, exitCode }` for custom shell queries.
+
+## Shell tool
+
+The additional `exec` tool uses Just Bash in a browser Web Worker. The virtual files are generated from `src/data/styleguide.ts`: `/guide/styleguide.md`, `/guide/index.json`, `/guide/sections/*.md`, and `/guide/rules/*.md`. Start with `cat /guide/README.md`.
+
+Each call starts a fresh shell in `/guide`. An adapter rejects all filesystem writes, including redirections and in-place edits. Only selected text/query commands are registered; network and external runtimes are disabled. The page does not persist command history or add command telemetry. Tool results are returned to the calling agent.
+
+The shell accepts up to 4096 characters, with a 3-second execution deadline, a 64 KiB output limit and a separate 10-second worker deadline that includes loading. The worker is terminated after each call. Just Bash's browser package is loaded on first execution; version 3.4.2 still imports `node:zlib`, so the browser build maps that import to an explicit unsupported-compression adapter. The virtual guide contains only plain text.
+
+```bash
+pnpm deploy:preview
+node scripts/verify-webmcp.mjs https://styleguidefyi-shell.steventsao.workers.dev/
+```
+
+`wrangler.preview.jsonc` deploys a separate `styleguidefyi-shell` Worker with a workers.dev address and no custom-domain routes. `pnpm run deploy` targets production. Both deployments expose all five tools.
+
+### Verify returned values
+
+`scripts/fixtures/exec-cases.json` contains reviewed inputs and complete expected `{ stdout, stderr, exitCode }` values for 12 cases. `scripts/fixtures/guide-tool-cases.json` preserves the four existing tools' complete results, captured from main before the addition. The unit tests call the real implementations, and the live verifier checks all five tools through Chrome's WebMCP API (16 calls total). Both compare the entire result, including whitespace, error text and unexpected fields; matching a snippet is not enough.
+
+```bash
+pnpm test
+node scripts/verify-webmcp.mjs
+# Optional: choose a deployment and capture path.
+node scripts/verify-webmcp.mjs https://styleguidefyi-shell.steventsao.workers.dev/ --output .webmcp-results/preview.json
+```
+
+The verifier saves full inputs and returned values to `.webmcp-results/latest.json` before checking them, including failed results. These local captures are gitignored. It never updates the expected fixtures automatically: when an intentional guide or tool change affects a result, review and edit that expectation in the same PR. Tests also check that extra/truncated output, missing newlines, stderr changes, wrong exit codes, extra result fields, and missing/duplicate calls fail verification.
 
 ## Contributing
 
@@ -28,7 +56,7 @@ Static [Astro](https://astro.build) site, served by Cloudflare Workers static as
 pnpm install
 pnpm test
 pnpm run deploy
-node scripts/verify-webmcp.mjs   # calls every WebMCP tool on the live site through real Chrome
+node scripts/verify-webmcp.mjs   # checks all five tools on production through real Chrome
 ```
 
 To try the tools in your own Chrome (149+): enable `chrome://flags/#enable-webmcp-testing`, then open the site with the Model Context Tool Inspector extension.
