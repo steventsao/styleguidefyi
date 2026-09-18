@@ -23,14 +23,18 @@ export function ruleToMarkdown(rule: Rule): string {
 }
 
 export function sectionToMarkdown(section: Section): string {
-	return [`## ${section.title}`, `_${section.summary}_`, ...section.rules.map(ruleToMarkdown)].join("\n\n");
+	return [
+		`## ${section.title}`,
+		...(section.summary ? [`_${section.summary}_`] : []),
+		...section.rules.map(ruleToMarkdown),
+	].join("\n\n");
 }
 
 export function styleguideToMarkdown(guide: Styleguide): string {
 	return (
 		[
 			`# ${guide.title}`,
-			guide.intro,
+			...(guide.intro ? [guide.intro] : []),
 			`Source: ${guide.url} (updated ${guide.updated})`,
 			...guide.sections.map(sectionToMarkdown),
 		].join("\n\n") + "\n"
