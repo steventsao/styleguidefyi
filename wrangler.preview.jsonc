@@ -1,7 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "styleguidefyi-shell",
-	"compatibility_date": "2026-09-17",
+	"compatibility_date": "2026-02-24",
 	"workers_dev": true,
 	"preview_urls": false,
 	"assets": {

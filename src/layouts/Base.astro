@@ -4,12 +4,14 @@ import { Font } from "astro:assets";
 interface Props {
 	title: string;
 	description: string;
+	canonicalPath?: string;
+	markdownUrl?: string | null;
 }
 
 const GITHUB_URL = "https://github.com/steventsao/styleguidefyi";
 
-const { title, description } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const { title, description, canonicalPath = Astro.url.pathname, markdownUrl = "/styleguide.md" } = Astro.props;
+const canonical = new URL(canonicalPath, Astro.site).href;
 ---
 
 <!doctype html>
@@ -23,7 +25,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical} />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-		<link rel="alternate" type="text/markdown" href="/styleguide.md" title="This guide as markdown" />
+		{markdownUrl && <link rel="alternate" type="text/markdown" href={markdownUrl} title="This guide as markdown" />}
 		<meta property="og:type" content="website" />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
@@ -37,6 +39,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 				<nav class="site-nav" aria-label="Main">
 					<a href="/#rules">Rules</a>
 					<a href="/#consensus">Consensus</a>
+					<a href="/#references">References</a>
 					<a href="/#webmcp">For agents</a>
 					<a href="/styleguide.md">styleguide.md</a>
 					<a class="github-link" href={GITHUB_URL} aria-label="Source code on GitHub">
@@ -211,6 +214,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 	@media (max-width: 640px) {
 		/* These links are also in the hero; keep the narrow header readable. */
 		.site-nav a[href="/styleguide.md"],
+		.site-nav a[href="/#references"],
 		.site-nav a[href="/#webmcp"] {
 			display: none;
 		}

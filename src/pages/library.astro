@@ -1,0 +1,23 @@
+---
+import Mirror from "../layouts/Mirror.astro";
+import { captures, collections, referenceOnly } from "../lib/mirrors";
+---
+
+<Mirror title="Captured style guides — styleguide.fyi" description="Saved public style guides, organized by GitHub organization and repository, with source and license provenance.">
+	<nav class="mirror-breadcrumbs" aria-label="Breadcrumb"><a href="/">Common coding guide</a><a href="/#references">Reference catalog</a><a href="/mirrors.json">Capture index as JSON</a></nav>
+	<h1>Captured style guides.</h1>
+	<p>{captures.length} documents from {collections.length} public repositories. Each snapshot records its source, capture time, checksum and reuse terms. Choose a collection or open a guide directly.</p>
+	<p>Paths follow <code>/org/repository/document</code>. <a href="/google/typescript">/google/typescript</a> is also a short address for the Google TypeScript capture.</p>
+	{collections.map((collection) => (
+		<section class="mirror-collection" aria-labelledby={`collection-${collection.id.replace("/", "-")}`}>
+			<h2 id={`collection-${collection.id.replace("/", "-")}`}><a href={`/${collection.id}`}>{collection.title}</a></h2>
+			<p><a href={`https://github.com/${collection.id}`}>{collection.id}</a></p>
+			<ul class="mirror-document-list">{collection.documents.map((doc) => <li><a href={`/${doc.route}`}>{doc.title}</a><small>{doc.license.label} · captured {doc.capturedAt.slice(0, 10)}</small></li>)}</ul>
+		</section>
+	))}
+	<section aria-labelledby="reference-only-title">
+		<h2 id="reference-only-title">Available at the original source</h2>
+		<p>These catalog entries have no full-text capture here.</p>
+		{referenceOnly.map((entry) => <div class="mirror-collection"><h3><a href={entry.url}>{entry.title}</a></h3><p>{entry.reason}</p></div>)}
+	</section>
+</Mirror>

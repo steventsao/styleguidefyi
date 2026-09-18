@@ -1,0 +1,56 @@
+---
+import Base from "./Base.astro";
+
+interface Props { title: string; description: string; canonicalPath?: string; }
+---
+
+<Base {...Astro.props} markdownUrl={null}>
+	<div class="mirror-shell"><slot /></div>
+</Base>
+
+<style is:global>
+	.mirror-shell { max-width: var(--page-width); margin: 0 auto; padding: 40px 16px; }
+	.mirror-shell h1 { margin: 24px 0 16px; max-width: 28ch; font-size: clamp(2rem, 5vw, 3rem); font-weight: 600; line-height: 1.12; letter-spacing: -0.025em; text-wrap: balance; }
+	.mirror-shell h2 { margin: 32px 0 12px; font-size: 1.5rem; font-weight: 600; line-height: 1.3; }
+	.mirror-shell h3 { margin: 24px 0 8px; font-size: 1.125rem; font-weight: 600; }
+	.mirror-shell p { max-width: 72ch; color: var(--text-secondary); }
+	.mirror-breadcrumbs, .mirror-actions { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.875rem; }
+	.mirror-breadcrumbs a { color: var(--text-secondary); }
+	.mirror-provenance { padding: 16px 0 24px; border-bottom: 1px solid var(--border); }
+	.mirror-provenance p { margin: 8px 0; }
+	.mirror-provenance details { margin-top: 16px; font-size: 0.875rem; color: var(--text-secondary); }
+	.mirror-shell summary { padding: 8px 0; cursor: pointer; font-weight: 500; color: var(--text); }
+	.mirror-shell summary:hover { color: var(--accent); }
+	.mirror-provenance code { overflow-wrap: anywhere; }
+	.mirror-reader { display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); gap: 48px; margin-top: 32px; }
+	.mirror-toc { position: sticky; top: calc(var(--header-height) + 16px); align-self: start; max-height: calc(100vh - var(--header-height) - 32px); overflow-y: auto; font-size: 0.875rem; }
+	.mirror-toc h2 { margin: 0 0 12px; font-size: 1rem; }
+	.mirror-toc ol { list-style: none; padding: 0 8px 0 0; margin: 0; }
+	.mirror-toc li { margin: 8px 0; }
+	.mirror-toc a { color: var(--text-secondary); text-decoration: none; overflow-wrap: anywhere; }
+	.mirror-toc a:hover { color: var(--accent); text-decoration: underline; }
+	.mirror-toc li[data-depth="3"] { padding-left: 12px; }
+	.mirror-article { min-width: 0; overflow-wrap: anywhere; }
+	.mirror-article > :first-child { margin-top: 0; }
+	.mirror-article p, .mirror-article li, .mirror-article dd { color: var(--text-secondary); }
+	.mirror-article pre { max-width: 100%; padding: 16px; overflow: auto; background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8125rem; line-height: 1.65; }
+	.mirror-article figure { margin: 20px 0; min-width: 0; }
+	.mirror-article figcaption { font-size: 0.875rem; font-weight: 600; }
+	.mirror-article figure pre { margin-top: 8px; }
+	.mirror-article table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: 0.875rem; }
+	.mirror-article th, .mirror-article td { padding: 10px 12px; text-align: left; border: 1px solid var(--border); }
+	.mirror-article blockquote { margin: 16px 0; padding: 0 20px; border-left: 1px solid var(--border); }
+	.mirror-article hr { border: 0; border-top: 1px solid var(--border); margin: 32px 0; }
+	.mirror-article [id] { scroll-margin-top: calc(var(--header-height) + 16px); }
+	.mirror-collection { padding: 24px 0; border-bottom: 1px solid var(--border); }
+	.mirror-collection h2 { margin-top: 0; }
+	.mirror-document-list { padding-left: 22px; }
+	.mirror-document-list li { margin: 16px 0; }
+	.mirror-document-list small { display: block; margin-top: 4px; color: var(--text-secondary); }
+	.mirror-license { margin-top: 48px; border-top: 1px solid var(--border); padding-top: 16px; font-size: 0.875rem; }
+	@media (max-width: 800px) {
+		.mirror-reader { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+		.mirror-toc { position: static; max-height: 240px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); }
+		.mirror-shell { padding-top: 24px; }
+	}
+</style>

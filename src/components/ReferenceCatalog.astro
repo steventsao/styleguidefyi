@@ -1,0 +1,109 @@
+---
+import { Code } from "astro:components";
+import { referenceCatalog as catalog } from "../data/references";
+import { styleguide } from "../data/styleguide";
+import { captures } from "../lib/mirrors";
+
+const rules = new Map(styleguide.sections.flatMap((section) => section.rules.map((rule) => [rule.id, rule] as const)));
+---
+
+<section class="references" id="references" aria-labelledby="references-title">
+	<h2 id="references-title">{catalog.title}</h2>
+	<p>{catalog.intro}</p>
+	<p class="catalog-meta">{catalog.entries.length} references · sources checked <time datetime={catalog.checkedAt}>{catalog.checkedAt}</time></p>
+	<div class="catalog-links">
+		<a href="/library">Browse captured guides</a>
+		<a href="/references.md">Catalog as Markdown</a>
+		<a href="/references.json">Catalog as JSON</a>
+	</div>
+	<p>{catalog.evidence}</p>
+
+	<details class="catalog-notes">
+		<summary>What we can verify about Codex and Fable</summary>
+		{catalog.agentUsage.map((agent) => (
+			<div class="agent-evidence">
+				<h3>{agent.name}</h3>
+				<p class="catalog-meta">{agent.status}</p>
+				<p>{agent.text}</p>
+				<ul class="source-links">
+					{agent.sources.map((source) => <li><a href={source.url}>{source.title}</a></li>)}
+				</ul>
+			</div>
+		))}
+	</details>
+
+	<details class="catalog-notes" id="apply-references">
+		<summary>How to use a guide with an agent</summary>
+		<ol class="adoption-steps">
+			{catalog.adoption.map((step) => <li><strong>{step.title}.</strong> {step.text}</li>)}
+		</ol>
+		<h3>{catalog.conflict.title}</h3>
+		<p>{catalog.conflict.text}</p>
+		<ul class="source-links">
+			{catalog.conflict.sources.map((source) => <li><a href={source.url}>{source.title}</a></li>)}
+		</ul>
+		<h3>An example instruction block</h3>
+		<p>Adapt this to your project. The catalog itself does not adopt this policy.</p>
+		<Code code={catalog.example} lang="markdown" themes={{ light: "github-light", dark: "github-dark" }} />
+	</details>
+
+	<p class="selection-note">{catalog.selection} “Cited by this project” identifies an existing source citation. “Reference only” marks a reading suggestion. Related rules are topical connections, not claims of influence or endorsement.</p>
+	<div class="reference-list">
+		{catalog.entries.map((entry) => (
+			<article class="reference" id={`reference-${entry.id}`}>
+				<h3><a href={entry.url}>{entry.title}</a></h3>
+				{captures.find((capture) => capture.catalogId === entry.id) && <p><a href={`/${captures.find((capture) => capture.catalogId === entry.id)!.route}`}>Read captured copy</a></p>}
+				<p class="catalog-meta">{entry.scope} · {entry.publisher}</p>
+				<p class="evidence-label">{entry.status === "cited-by-project" ? "Cited by this project" : "Reference only"}</p>
+				<p>{entry.summary}</p>
+				<details>
+					<summary>Application and limits<span class="sr-only">: {entry.title}</span></summary>
+					<dl>
+						<dt>Use it</dt><dd>{entry.use}</dd>
+						<dt>Check it</dt><dd>{entry.check}</dd>
+						<dt>Limits</dt><dd>{entry.limit}</dd>
+					</dl>
+					{entry.sources.length > 0 && (
+						<ul class="source-links">
+							{entry.sources.map((source) => <li><a href={source.url}>{source.title}</a></li>)}
+						</ul>
+					)}
+					<p class="related-label">Related rules in this guide</p>
+					<ul class="source-links">
+						{entry.relatedRules.map((id) => <li><a href={`/#${id}`}>{rules.get(id)!.title}</a></li>)}
+					</ul>
+				</details>
+			</article>
+		))}
+	</div>
+</section>
+
+<style>
+	.references { padding-top: 64px; }
+	h2 { margin: 0 0 16px; font-size: 1.75rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
+	h3 { margin: 0; font-size: 1.125rem; font-weight: 600; line-height: 1.4; }
+	p { margin: 10px 0; max-width: 72ch; color: var(--text-secondary); }
+	.catalog-meta, .evidence-label, .source-links, .catalog-links { font-size: 0.875rem; }
+	.catalog-meta { margin: 6px 0; }
+	.catalog-links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 16px 0 24px; }
+	.catalog-notes { padding: 16px 0; border-bottom: 1px solid var(--border); }
+	summary { cursor: pointer; font-weight: 500; padding: 6px 0; }
+	summary:hover { color: var(--accent); }
+	.agent-evidence, .catalog-notes h3 { margin-top: 24px; }
+	.adoption-steps { padding-left: 24px; color: var(--text-secondary); }
+	.adoption-steps li { margin: 16px 0; }
+	.adoption-steps strong { color: var(--text); }
+	.selection-note { margin: 32px 0 8px; }
+	.reference { padding: 28px 0; border-bottom: 1px solid var(--border); }
+	.reference:last-child { border-bottom: 0; }
+	.reference h3 a { text-decoration-thickness: 1px; }
+	.evidence-label { margin: 8px 0; color: var(--accent); }
+	dl { margin: 12px 0 20px; }
+	dt { margin-top: 16px; font-weight: 500; }
+	dd { margin: 4px 0 0; color: var(--text-secondary); }
+	.source-links { margin: 8px 0 16px; padding-left: 20px; color: var(--text-secondary); }
+	.source-links li { margin-top: 6px; }
+	.related-label { margin-top: 20px; font-weight: 500; color: var(--text); }
+	.references :global(.astro-code) { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8125rem; line-height: 1.6; overflow-x: auto; background: var(--code-bg) !important; }
+	.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+</style>

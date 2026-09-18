@@ -1,4 +1,9 @@
 # Let agents and scripts on other origins fetch the markdown version.
+/deployment.json
+  Content-Type: application/json; charset=utf-8
+  Access-Control-Allow-Origin: *
+  Cache-Control: no-store
+
 /styleguide.md
   Access-Control-Allow-Origin: *
   Content-Type: text/markdown; charset=utf-8
@@ -6,3 +11,30 @@
 /consensus.json
   Access-Control-Allow-Origin: *
   Content-Type: application/json; charset=utf-8
+
+/references.md
+  Access-Control-Allow-Origin: *
+  Content-Type: text/markdown; charset=utf-8
+
+/references.json
+  Access-Control-Allow-Origin: *
+  Content-Type: application/json; charset=utf-8
+
+/mirrors.json
+  Access-Control-Allow-Origin: *
+  Content-Type: application/json; charset=utf-8
+
+/*.capture.json
+  Access-Control-Allow-Origin: *
+  Content-Type: application/json; charset=utf-8
+
+/*.source.txt
+  Access-Control-Allow-Origin: *
+  Content-Type: text/plain; charset=utf-8
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: default-src 'none'; sandbox
+
+/licenses/mirrors/*
+  Access-Control-Allow-Origin: *
+  Content-Type: text/plain; charset=utf-8
+  X-Content-Type-Options: nosniff
