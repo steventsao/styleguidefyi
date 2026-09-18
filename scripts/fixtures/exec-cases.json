@@ -154,13 +154,13 @@
     }
   },
   {
-    "label": "keep Fable unrated",
+    "label": "read Fable rating",
     "tool": "exec",
     "input": {
-      "command": "jq '[.rules[] | select(.reviews.fable != null)] | length' consensus.json"
+      "command": "jq -r '.rules[] | select(.id == \"todo-with-owner\") | .reviews.fable.rating' consensus.json"
     },
     "expected": {
-      "stdout": "0\n",
+      "stdout": "somewhat-agree\n",
       "stderr": "",
       "exitCode": 0
     }
@@ -170,6 +170,18 @@
     "tool": "exec",
     "input": {
       "command": "jq '[.rules[] | select(.reviews.astra.status == \"current\")] | length' consensus.json"
+    },
+    "expected": {
+      "stdout": "59\n",
+      "stderr": "",
+      "exitCode": 0
+    }
+  },
+  {
+    "label": "all Fable assessments match current wording",
+    "tool": "exec",
+    "input": {
+      "command": "jq '[.rules[] | select(.reviews.fable.status == \"current\")] | length' consensus.json"
     },
     "expected": {
       "stdout": "59\n",
