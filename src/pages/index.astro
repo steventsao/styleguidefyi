@@ -105,6 +105,16 @@ await modelContext?.registerTool({
 										)}
 									</div>
 								)}
+								{rule.references && (
+									<ul class="rule-sources" aria-label="Sources">
+										{rule.references.map((reference) => (
+											<li>
+												<a href={reference.url}>{reference.title}</a>
+												<span class="rule-source-by"> ({reference.by})</span>
+											</li>
+										))}
+									</ul>
+								)}
 							</article>
 						))}
 					</section>
@@ -421,6 +431,23 @@ await modelContext?.registerTool({
 		color: var(--prefer);
 	}
 
+	.rule-sources {
+		margin: 14px 0 0 var(--rule-indent);
+		padding: 0;
+		list-style: none;
+		font-size: 0.8125rem;
+		line-height: 1.6;
+		color: var(--muted);
+	}
+
+	.rule-sources a {
+		color: var(--text-secondary);
+	}
+
+	.rule-sources a:hover {
+		color: var(--accent);
+	}
+
 	.content :global(.astro-code) {
 		margin: 0;
 		padding: 10px 14px 12px;
@@ -559,7 +586,8 @@ await modelContext?.registerTool({
 		}
 
 		.rule-why,
-		.examples {
+		.examples,
+		.rule-sources {
 			margin-left: 0;
 		}
 	}
