@@ -29,7 +29,7 @@
       "command": "grep -l 'permission' rules/*.md | sort"
     },
     "expected": {
-      "stdout": "rules/parse-at-the-boundary.md\nrules/rule-of-three.md\n",
+      "stdout": "rules/coverage-is-not-a-quota.md\nrules/parse-at-the-boundary.md\nrules/rule-of-three.md\n",
       "stderr": "",
       "exitCode": 0
     },
@@ -53,7 +53,7 @@
       "command": "jq '{sections: (.sections | length), rules: ([.sections[].rules[]] | length)}' index.json"
     },
     "expected": {
-      "stdout": "{\n  \"sections\": 12,\n  \"rules\": 59\n}\n",
+      "stdout": "{\n  \"sections\": 12,\n  \"rules\": 60\n}\n",
       "stderr": "",
       "exitCode": 0
     },
