@@ -1,4 +1,5 @@
 import { defineConfig, fontProviders } from "astro/config";
+import sitemap from "@astrojs/sitemap";
 import { fileURLToPath } from "node:url";
 
 // Cloudflare answers any asset path that contains "@" with a 307 to the percent-encoded path before it serves the file.
@@ -12,6 +13,13 @@ const assetFileNames = (asset) => {
 export default defineConfig({
 	site: "https://styleguide.fyi",
 	output: "static",
+	integrations: [
+		sitemap({
+			// A markdown file is a page too: it is what an agent indexes and fetches.
+			customPages: ["https://styleguide.fyi/styleguide.md", "https://styleguide.fyi/references.md"],
+			filter: (page) => !page.endsWith("/404/"),
+		}),
+	],
 	vite: {
 		resolve: {
 			alias: { "node:zlib": fileURLToPath(new URL("./src/lib/browser-compression.ts", import.meta.url)) },

@@ -22,6 +22,31 @@ function inlineCode(text: string): string {
 	return escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 
+/**
+ * Structured data for the guide. `dateModified` is what a search engine reads to decide
+ * how fresh the page is, and it comes from the guide itself so it cannot drift.
+ */
+const structuredData = {
+	"@context": "https://schema.org",
+	"@type": "TechArticle",
+	"@id": `${styleguide.url}/#guide`,
+	headline: styleguide.title,
+	name: styleguide.title,
+	description: `${ruleCount} coding rules with TypeScript examples, each with the reason behind it.`,
+	url: `${styleguide.url}/`,
+	dateModified: styleguide.updated,
+	inLanguage: "en",
+	isAccessibleForFree: true,
+	license: "https://github.com/steventsao/styleguidefyi/blob/main/LICENSE",
+	author: { "@type": "Person", name: "Steven Tsao" },
+	articleSection: styleguide.sections.map((section) => section.title),
+	encoding: {
+		"@type": "MediaObject",
+		encodingFormat: "text/markdown",
+		contentUrl: `${styleguide.url}/styleguide.md`,
+	},
+};
+
 const registrationExample = `import { createShellTool } from "./webmcp-tools";
 import { runShell } from "./shell-client";
 
@@ -42,6 +67,8 @@ const shellExamples = [
 	title="styleguide.fyi — a common coding style guide"
 	description={`${ruleCount} coding rules with TypeScript examples. Available as Markdown and through WebMCP.`}
 >
+	<script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
+
 	<section class="hero">
 		<p class="eyebrow">{ruleCount} rules · updated {styleguide.updated}</p>
 		<h1>Coding style guide.</h1>

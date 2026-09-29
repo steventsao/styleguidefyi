@@ -35,6 +35,9 @@ jobs:
       - run: pnpm build
         env:
           DEPLOY_COMMIT_SHA: ${{ github.sha }}
+          # Public, write-only PostHog token. It ships in the HTML but is kept out of the
+          # repository. Without it the build still passes and the pages record nothing.
+          PUBLIC_POSTHOG_KEY: ${{ vars.PUBLIC_POSTHOG_KEY }}
       - name: Verify built site through the local Cloudflare runtime
         shell: bash
         run: |

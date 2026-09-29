@@ -1,17 +1,23 @@
 ---
 import { Font } from "astro:assets";
+import Analytics from "../components/Analytics.astro";
 
 interface Props {
 	title: string;
 	description: string;
 	canonicalPath?: string;
 	markdownUrl?: string | null;
+	/** Keeps a page out of the search index. The 404 page answers with 200 on its own path. */
+	noindex?: boolean;
 }
 
 const GITHUB_URL = "https://github.com/steventsao/styleguidefyi";
+/** Proves ownership of styleguide.fyi to the Search Console property that reports on it. */
+const GOOGLE_SITE_VERIFICATION = "HZfftGpB89_cPpLBYPz5Karp1k4mu8X2I8_BXFJ37EE";
 
-const { title, description, canonicalPath = Astro.url.pathname, markdownUrl = "/styleguide.md" } = Astro.props;
+const { title, description, canonicalPath = Astro.url.pathname, markdownUrl = "/styleguide.md", noindex = false } = Astro.props;
 const canonical = new URL(canonicalPath, Astro.site).href;
+const ogImage = new URL("/og.png", Astro.site).href;
 ---
 
 <!doctype html>
@@ -24,13 +30,25 @@ const canonical = new URL(canonicalPath, Astro.site).href;
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical} />
+		{noindex && <meta name="robots" content="noindex, follow" />}
+		<meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		{markdownUrl && <link rel="alternate" type="text/markdown" href={markdownUrl} title="This guide as markdown" />}
 		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="styleguide.fyi" />
+		<meta property="og:locale" content="en_US" />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta property="og:url" content={canonical} />
-		<meta name="twitter:card" content="summary" />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="styleguide.fyi — a common coding style guide" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImage} />
+		<Analytics />
 	</head>
 	<body>
 		<header class="site-header">

@@ -1,4 +1,5 @@
 import { styleguide } from "../data/styleguide";
+import { EVENTS, track } from "../lib/analytics";
 import { countRules, searchRules, styleguideToMarkdown } from "../lib/styleguide";
 import { createTools, type PageActions, type WebMcpTool } from "../lib/webmcp-tools";
 import { runShell } from "./shell-client";
@@ -18,6 +19,15 @@ declare global {
 
 const REVEAL_HIGHLIGHT_MS = 2000;
 const COPIED_LABEL_MS = 1500;
+/** Long enough that a typed query reports once it settles, not once per keystroke. */
+const SEARCH_SETTLE_MS = 900;
+/** Below this a query is still being typed and says nothing about intent. */
+const MIN_REPORTED_QUERY_LENGTH = 3;
+
+const RULE_SECTIONS = new Map(
+	styleguide.sections.flatMap((section) => section.rules.map((rule) => [rule.id, section.id] as const))
+);
+const SECTION_IDS = new Set(styleguide.sections.map((section) => section.id));
 
 const filterInput = document.querySelector<HTMLInputElement>("#rule-filter")!;
 const filterCount = document.querySelector<HTMLElement>("#filter-count")!;
@@ -58,9 +68,76 @@ const page: PageActions = {
 	},
 };
 
-const tools = createTools(styleguide, page, runShell);
+/**
+ * Wraps each tool so a call reports itself. This covers a real agent and the Run
+ * buttons alike, because both go through the same `execute`.
+ */
+function withTracking(tool: WebMcpTool, source: "agent" | "run-button"): WebMcpTool {
+	return {
+		...tool,
+		execute: async (input) => {
+			const result = await tool.execute(input);
+			const failed = typeof result === "object" && result !== null && "error" in result;
+			track(EVENTS.webmcpToolCalled, {
+				tool: tool.name,
+				source,
+				failed,
+				command: typeof input.command === "string" ? input.command : undefined,
+				query: typeof input.query === "string" ? input.query : undefined,
+				section: typeof input.sectionId === "string" ? input.sectionId : undefined,
+			});
+			return result;
+		},
+	};
+}
 
-filterInput.addEventListener("input", () => applyFilter(filterInput.value));
+const tools = createTools(styleguide, page, runShell).map((tool) => withTracking(tool, "agent"));
+
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+
+filterInput.addEventListener("input", () => {
+	applyFilter(filterInput.value);
+	clearTimeout(searchTimer);
+	const query = filterInput.value.trim();
+	if (query.length < MIN_REPORTED_QUERY_LENGTH) return;
+	searchTimer = setTimeout(
+		() => track(EVENTS.ruleSearched, { query, matches: searchRules(styleguide, query).length }),
+		SEARCH_SETTLE_MS
+	);
+});
+
+/**
+ * Reports the rule or section behind the current hash. A search result links straight
+ * to a rule anchor, so this is what says which rule earns the traffic.
+ */
+function trackHash(): void {
+	const id = decodeURIComponent(location.hash.slice(1));
+	if (!id) return;
+	const section = RULE_SECTIONS.get(id);
+	if (section) {
+		track(EVENTS.ruleOpened, { rule: id, section });
+		return;
+	}
+	if (SECTION_IDS.has(id)) track(EVENTS.sectionOpened, { section: id });
+}
+
+trackHash();
+window.addEventListener("hashchange", trackHash);
+
+// One listener for every outbound and data link, so a new link needs no new code.
+document.addEventListener("click", (event) => {
+	const link = (event.target as Element | null)?.closest?.("a");
+	if (!(link instanceof HTMLAnchorElement)) return;
+
+	const path = link.getAttribute("href") ?? "";
+	if (path === "/styleguide.md" || path === "/consensus.json" || path === "/llms.txt") {
+		track(EVENTS.dataEndpointOpened, { endpoint: path });
+		return;
+	}
+	if (link.closest(".rule-sources")) {
+		track(EVENTS.referenceOpened, { url: link.href, host: link.hostname, rule: link.closest("[data-rule]")?.id ?? null });
+	}
+});
 
 // --- WebMCP registration ---
 
@@ -75,6 +152,7 @@ async function registerTools() {
 	const modelContext = document.modelContext ?? navigator.modelContext;
 	if (!modelContext) {
 		setStatus("unavailable", "This browser does not expose WebMCP. The tools below still run with the Run button.");
+		track(EVENTS.webmcpDetected, { state: "unavailable", registered: 0, tools: tools.length });
 		return;
 	}
 
@@ -86,16 +164,20 @@ async function registerTools() {
 
 	if (failures.length > 0) {
 		setStatus("failed", `WebMCP is present, but ${failures.length} of ${tools.length} tools did not register. See the console.`);
+		track(EVENTS.webmcpDetected, { state: "failed", registered: tools.length - failures.length, tools: tools.length });
 		return;
 	}
 	setStatus("active", `WebMCP is active. ${tools.length} tools are registered, including exec.`);
+	track(EVENTS.webmcpDetected, { state: "active", registered: tools.length, tools: tools.length });
 }
 
 registerTools();
 
 // --- Run forms use the same tool implementations without scrolling or filtering the page ---
 
-const previewTools = createTools(styleguide, { revealSection() {}, filterRules() {} }, runShell);
+const previewTools = createTools(styleguide, { revealSection() {}, filterRules() {} }, runShell).map((tool) =>
+	withTracking(tool, "run-button")
+);
 
 for (const form of document.querySelectorAll<HTMLFormElement>("form[data-tool]")) {
 	const tool = previewTools.find((candidate) => candidate.name === form.dataset.tool)!;
@@ -135,5 +217,6 @@ const copyLabel = copyButton.textContent;
 copyButton.addEventListener("click", async () => {
 	await navigator.clipboard.writeText(styleguideToMarkdown(styleguide));
 	copyButton.textContent = "Copied";
+	track(EVENTS.guideCopied, { rules: countRules(styleguide), updated: styleguide.updated });
 	setTimeout(() => (copyButton.textContent = copyLabel), COPIED_LABEL_MS);
 });

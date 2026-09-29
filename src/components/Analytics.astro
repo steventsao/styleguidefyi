@@ -1,0 +1,19 @@
+---
+/**
+ * Loads the analytics client on every page.
+ *
+ * The key is not in the repository: CI supplies it from the repository variable
+ * PUBLIC_POSTHOG_KEY and a local build reads `.env`. A build without it still succeeds
+ * and records nothing, so a contributor without the token is never blocked. The warning
+ * is what a release build leaves in the log.
+ */
+if (import.meta.env.PROD && !import.meta.env.PUBLIC_POSTHOG_KEY) {
+	console.warn("PUBLIC_POSTHOG_KEY is not set: this build records nothing.");
+}
+---
+
+<script>
+	import { initAnalytics } from "../scripts/analytics";
+
+	initAnalytics();
+</script>
