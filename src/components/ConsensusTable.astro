@@ -83,6 +83,12 @@ const counts = Object.fromEntries(REVIEWERS.map(({ id }) => [id, rules.filter(ru
 </section>
 
 <script>
+	import { EVENTS, track } from "../lib/analytics";
+
+	/** Long enough that a typed query reports once it settles, not once per keystroke. */
+	const SEARCH_SETTLE_MS = 900;
+	const MIN_REPORTED_QUERY_LENGTH = 3;
+
 	const search = document.querySelector<HTMLInputElement>("#consensus-search")!;
 	const rating = document.querySelector<HTMLSelectElement>("#consensus-rating")!;
 	const rows = [...document.querySelectorAll<HTMLTableRowElement>("[data-consensus-rule]")];
@@ -97,8 +103,32 @@ const counts = Object.fromEntries(REVIEWERS.map(({ id }) => [id, rules.filter(ru
 		document.querySelector("#consensus-count")!.textContent = `${visible} of ${rows.length} rules`;
 		document.querySelector<HTMLElement>("#consensus-empty")!.hidden = visible > 0;
 	}
-	search.addEventListener("input", filterConsensus);
-	rating.addEventListener("change", filterConsensus);
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
+
+	search.addEventListener("input", () => {
+		filterConsensus();
+		clearTimeout(searchTimer);
+		const query = search.value.trim();
+		if (query.length < MIN_REPORTED_QUERY_LENGTH) return;
+		searchTimer = setTimeout(() => track(EVENTS.consensusSearched, { query, rating: rating.value }), SEARCH_SETTLE_MS);
+	});
+
+	rating.addEventListener("change", () => {
+		filterConsensus();
+		track(EVENTS.consensusSearched, { query: search.value.trim(), rating: rating.value });
+	});
+
+	// A rationale is the part of the table no other site has. Track which ones people open.
+	for (const details of document.querySelectorAll<HTMLDetailsElement>("[data-consensus-rule] details")) {
+		details.addEventListener("toggle", () => {
+			if (!details.open) return;
+			const row = details.closest<HTMLTableRowElement>("[data-consensus-rule]")!;
+			track(EVENTS.consensusRationaleOpened, {
+				rule: row.dataset.consensusRule ?? null,
+				reviewer: details.closest<HTMLTableCellElement>("[data-reviewer]")?.dataset.reviewer ?? null,
+			});
+		});
+	}
 </script>
 
 <style>

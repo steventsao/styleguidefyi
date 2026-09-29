@@ -1,0 +1,10 @@
+# styleguide.fyi is written to be read by people and by agents. Everything here is
+# public, and an agent that copies the guide into its instructions is the point.
+
+# Cloudflare content signals. This site grants what a crawler may do with the guide.
+# Content-Signal: search=yes, ai-input=yes, ai-train=yes
+
+User-agent: *
+Allow: /
+
+Sitemap: https://styleguide.fyi/sitemap-index.xml
