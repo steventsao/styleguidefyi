@@ -15,8 +15,8 @@ export default defineConfig({
 	output: "static",
 	integrations: [
 		sitemap({
-			// The markdown file is a page too: it is what an agent indexes and fetches.
-			customPages: ["https://styleguide.fyi/styleguide.md"],
+			// A markdown file is a page too: it is what an agent indexes and fetches.
+			customPages: ["https://styleguide.fyi/styleguide.md", "https://styleguide.fyi/references.md"],
 			filter: (page) => !page.endsWith("/404/"),
 		}),
 	],
