@@ -41,6 +41,7 @@ Copy `.env.example` to `.env` before the first build, and put the real PostHog t
 | `src/pages/llms.txt.ts`      | Generated `/llms.txt`: what an agent should fetch, with live counts                     |
 | `public/robots.txt`          | Allows every crawler and points at the sitemap                                          |
 | `scripts/og/`                | Source and renderer for `public/og.png`, the social preview image                        |
+| `scripts/verify-analytics.mjs` | Drives a real page and reads the event names out of PostHog's own request bodies         |
 | `scripts/fixtures/exec-cases.json` | Reviewed `exec` results; `guide-tool-cases.json` preserves the four original tools. Both feed unit/live checks |
 
 ## Rules
@@ -54,5 +55,7 @@ Copy `.env.example` to `.env` before the first build, and put the real PostHog t
 - The live verifier captures full responses in gitignored `.webmcp-results/latest.json` and compares them with reviewed fixtures. Do not update expectations just to make a failing check pass.
 - Analytics goes to PostHog project `styleguidefyi` (635091). `PUBLIC_POSTHOG_KEY` is a public write-only token: it ships in the HTML, so it is not a secret, but it still comes from the environment.
 - Add an event by adding it to `EVENTS` in `src/lib/analytics.ts` first. Call `track`, never `posthog.capture`: only `track` clamps long values and survives a client that has not loaded.
+- After a change to the events, deploy and run `node scripts/verify-analytics.mjs`. Add the new name to `EXPECTED_EVENTS` there.
+- PostHog drops an automated browser as a bot by default, which would erase every agent visit. `opt_out_useragent_filter` keeps them and the `is_automated` super property labels them. Filter on it; do not remove it.
 - The Cloudflare zone can enable a "Managed robots.txt", which shadows `public/robots.txt`. After a deploy, check `curl -s https://styleguide.fyi/robots.txt` against the repo file; fix a mismatch in the Cloudflare dashboard, not here.
 - `/404` answers 200 on its own path, so the 404 page passes `noindex` to `Base.astro`. Unknown paths answer 404 and need nothing.

@@ -29,6 +29,12 @@ export async function initAnalytics(): Promise<void> {
 		autocapture: true,
 		capture_heatmaps: true,
 		session_recording: { maskAllInputs: false },
+		// A browser agent drives an automated browser, which PostHog drops as a bot by
+		// default. This page exists to be read by agents, so losing that traffic would
+		// erase the signal. Capture it and label it below instead.
+		opt_out_useragent_filter: true,
 	});
+	// On every event, so a report can separate a reader from an agent or a crawler.
+	posthog.register({ is_automated: navigator.webdriver === true });
 	setCapturer(posthog);
 }
