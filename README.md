@@ -13,6 +13,8 @@ A common coding style guide for people and agents to review and improve together
 
 The plugin Worker uses `src/data/styleguide.ts` as its only guide data source. Its tools are read-only: `browse_guide`, `get_rule`, `get_section`, `search_rules`, `get_styleguide`, and `search_mentions`. Rule and section ids match the site's URL anchors. The model gets exact rule text and a source URL; the app offers browsing, search, examples and source links. The guide is a proposed set of defaults, so project instructions take priority.
 
+[Preview the sidebar, search, conversation panel, and walkthrough](docs/plugin/README.md).
+
 Use Node 24 to check the remote MCP transport locally:
 
 ```bash

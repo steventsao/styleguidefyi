@@ -295,8 +295,9 @@ render();
 void app.connect().then(() => {
 	applyHostContext(app.getHostContext());
 	applyDeepLink();
-	if (!view && !busy) void callTool("browse_guide");
-	else render();
+	// The entrypoint's initial tool result arrives from the host. A second
+	// browse call here can race with and replace a deep-linked rule or search.
+	render();
 }).catch((cause) => {
 	error = cause instanceof Error ? cause.message : "Could not connect to the guide.";
 	render();
