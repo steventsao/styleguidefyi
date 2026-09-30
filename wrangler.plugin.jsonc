@@ -3,5 +3,5 @@
 	"name": "styleguidefyi-plugin",
 	"main": "src/plugin/worker.ts",
 	"compatibility_date": "2026-02-24",
-	"routes": [{ "pattern": "mcp.styleguide.fyi", "custom_domain": true }]
+	"routes": [{ "pattern": "plugin.styleguide.fyi", "custom_domain": true }]
 }
