@@ -137,4 +137,4 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: 'false'
       - name: Verify production MCP tools and app resource
-        run: pnpm plugin:verify https://mcp.styleguide.fyi/mcp
+        run: pnpm plugin:verify https://plugin.styleguide.fyi/mcp

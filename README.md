@@ -24,7 +24,9 @@ pnpm plugin:dev --port 8791
 pnpm plugin:verify http://localhost:8791/mcp
 ```
 
-`pnpm plugin:build` creates the self-contained app HTML used by the MCP resource. It runs automatically before tests, typechecking and builds. `pnpm plugin:dry-run` checks the Worker bundle. The preview Worker uses `wrangler.plugin.preview.jsonc`; the production Worker uses `wrangler.plugin.jsonc` and serves `https://mcp.styleguide.fyi/mcp`. The portable manifest in `plugins/styleguide-fyi/plugin.json` and `mcp.json` points to that production endpoint. Production CI deploys the MCP Worker after the static site, then verifies its tools and app resource. The endpoint must be deployed before installing or submitting the plugin.
+`pnpm plugin:build` creates the self-contained app HTML used by the MCP resource. It runs automatically before tests, typechecking and builds. `pnpm plugin:dry-run` checks the Worker bundle. The preview Worker uses `wrangler.plugin.preview.jsonc`; the production Worker uses `wrangler.plugin.jsonc` and serves `https://plugin.styleguide.fyi/mcp`. The portable manifest in `plugins/styleguide-fyi/plugin.json` and `mcp.json` points to that production endpoint. Production CI deploys the MCP Worker after the static site, then verifies its tools and app resource. The endpoint must be deployed before installing or submitting the plugin.
+
+The existing `mcp.styleguide.fyi/*` Worker route serves a separate backend. Keep the plugin on its own hostname so its tools and app resource reach the intended Worker.
 
 For a local preview deployment, run `pnpm plugin:deploy:preview` and pass its workers.dev `/mcp` URL to `pnpm plugin:verify`. To test the plugin in ChatGPT, register the remote MCP endpoint in developer mode, then install the package from `plugins/styleguide-fyi/` following the [OpenAI plugin testing guide](https://developers.openai.com/plugins/deploy/connect-chatgpt).
 

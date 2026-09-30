@@ -3,7 +3,7 @@
   "mcpServers": {
     "styleguide": {
       "type": "streamable-http",
-      "url": "https://mcp.styleguide.fyi/mcp"
+      "url": "https://plugin.styleguide.fyi/mcp"
     }
   }
 }
