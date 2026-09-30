@@ -7,6 +7,26 @@ A common coding style guide for people and agents to review and improve together
 - **Agreement table:** one row per rule, with independent Astra and Fable assessments; available at `/#consensus` and `/consensus.json`.
 - **Reference catalog:** `/#references`, `/references.md` and `/references.json` explain the scope, application, checks and limits of public style guides and engineering references.
 - **WebMCP:** the page registers five read-only tools on `document.modelContext`: `list-sections`, `get-section`, `search-rules`, `get-styleguide`, and `exec`. The first four provide direct guide queries. `exec` accepts `{ "command": "ls /guide" }` and returns `{ stdout, stderr, exitCode }` for custom shell queries.
+- **OpenAI plugin:** `plugins/styleguide-fyi/` packages a remote MCP server and an MCP App for the ChatGPT sidebar and conversation panel. The app browses and searches the same rules as the site, supports rule and section deep links, and can add a selected rule to the conversation context. Composer mentions return links to individual rules.
+
+## OpenAI plugin
+
+The plugin Worker uses `src/data/styleguide.ts` as its only guide data source. Its tools are read-only: `browse_guide`, `get_rule`, `get_section`, `search_rules`, `get_styleguide`, and `search_mentions`. Rule and section ids match the site's URL anchors. The model gets exact rule text and a source URL; the app offers browsing, search, examples and source links. The guide is a proposed set of defaults, so project instructions take priority.
+
+[Preview the sidebar, search, conversation panel, and walkthrough](docs/plugin/README.md).
+
+Use Node 24 to check the remote MCP transport locally:
+
+```bash
+pnpm install
+pnpm plugin:dev --port 8791
+# In another terminal:
+pnpm plugin:verify http://localhost:8791/mcp
+```
+
+`pnpm plugin:build` creates the self-contained app HTML used by the MCP resource. It runs automatically before tests, typechecking and builds. `pnpm plugin:dry-run` checks the Worker bundle. The preview Worker uses `wrangler.plugin.preview.jsonc`; the production Worker uses `wrangler.plugin.jsonc` and serves `https://mcp.styleguide.fyi/mcp`. The portable manifest in `plugins/styleguide-fyi/plugin.json` and `mcp.json` points to that production endpoint. Production CI deploys the MCP Worker after the static site, then verifies its tools and app resource. The endpoint must be deployed before installing or submitting the plugin.
+
+For a local preview deployment, run `pnpm plugin:deploy:preview` and pass its workers.dev `/mcp` URL to `pnpm plugin:verify`. To test the plugin in ChatGPT, register the remote MCP endpoint in developer mode, then install the package from `plugins/styleguide-fyi/` following the [OpenAI plugin testing guide](https://developers.openai.com/plugins/deploy/connect-chatgpt).
 
 ## Shell tool
 

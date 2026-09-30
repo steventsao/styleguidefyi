@@ -38,6 +38,30 @@ jobs:
           # Public, write-only PostHog token. It ships in the HTML but is kept out of the
           # repository. Without it the build still passes and the pages record nothing.
           PUBLIC_POSTHOG_KEY: ${{ vars.PUBLIC_POSTHOG_KEY }}
+      - run: pnpm plugin:dry-run
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+      - name: Verify plugin through the local MCP transport
+        shell: bash
+        run: |
+          pnpm exec wrangler dev --local --config wrangler.plugin.preview.jsonc --ip 127.0.0.1 --port 8791 > /tmp/styleguide-plugin-preview.log 2>&1 &
+          plugin_pid=$!
+          trap 'kill "$plugin_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8791/health > /dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then
+            cat /tmp/styleguide-plugin-preview.log
+            exit 1
+          fi
+          pnpm plugin:verify http://127.0.0.1:8791/mcp
+        env:
+          WRANGLER_SEND_METRICS: 'false'
       - name: Verify built site through the local Cloudflare runtime
         shell: bash
         run: |
@@ -106,3 +130,11 @@ jobs:
         run: pnpm verify:site https://styleguide.fyi --commit "$DEPLOY_COMMIT_SHA"
         env:
           DEPLOY_COMMIT_SHA: ${{ github.sha }}
+      - name: Deploy the plugin MCP server
+        run: pnpm plugin:deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'
+      - name: Verify production MCP tools and app resource
+        run: pnpm plugin:verify https://mcp.styleguide.fyi/mcp
