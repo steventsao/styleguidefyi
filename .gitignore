@@ -11,6 +11,7 @@ images/
 scripts/images.sql
 .playwright-mcp
 .webmcp-results/
+src/plugin/app.generated.ts
 
 # Local research data and backups. Never publish.
 scratch/
