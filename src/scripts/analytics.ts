@@ -28,7 +28,8 @@ export async function initAnalytics(): Promise<void> {
 		// Autocapture records the outbound clicks that named events would miss.
 		autocapture: true,
 		capture_heatmaps: true,
-		session_recording: { maskAllInputs: false },
+		// Newsletter addresses must never enter recordings or automatic capture.
+		session_recording: { maskAllInputs: true },
 		// A browser agent drives an automated browser, which PostHog drops as a bot by
 		// default. This page exists to be read by agents, so losing that traffic would
 		// erase the signal. Capture it and label it below instead.

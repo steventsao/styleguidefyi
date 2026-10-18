@@ -98,7 +98,33 @@ Use the PR discussion to resolve disagreements. An agent's contribution is a pro
 
 ## Stack
 
-Static [Astro](https://astro.build) site, served by Cloudflare Workers static assets. The guide lives in `src/data/styleguide.ts`; the page, the markdown file and the WebMCP tools all read from it.
+Static [Astro](https://astro.build) reading pages, served by Cloudflare Workers static assets. The guide lives in `src/data/styleguide.ts`; the page, the markdown file and the WebMCP tools all read from it. A small Worker handles newsletter POST requests using Cloudflare D1. Preview and production use separate databases.
+
+## Blog and search
+
+`/blog` contains original articles; `/rss.xml` exposes published entries. Add a Markdown file in `src/content/blog/` with `title`, `description`, `published`, `category`, and `relatedRules` frontmatter, following the existing articles. Set `draft: true` while preparing a post. Future and draft articles have no public route or feed entry. Add `updated` only for a substantive revision; publication dates are not reset during builds. Keep slugs stable after publication.
+
+Articles are fully rendered HTML with canonical URLs, bylines, publication dates, article and breadcrumb JSON-LD, related rules, and RSS discovery. The sitemap excludes aliases, duplicate Markdown downloads, 404, and unsubscribe actions. Existing guide anchors and agent tools keep their public contracts. `pnpm verify:site <origin>` checks article content against the build, schema, RSS, sitemap coverage, and internal article links as well as the guide and captures.
+
+## Newsletter launch list
+
+The signup works using Cloudflare only. `src/newsletter/worker.ts` validates same-origin form posts, checks explicit consent, applies a 10-request-per-minute limiter per IP per Cloudflare location, and uses parameterized D1 statements. Shared networks can share this allowance. Bodies are limited to 4 KiB; a honeypot rejects basic bot submissions. These are basic abuse controls, not proof of a human or email ownership.
+
+Addresses are normalized and stored once, with a timestamp, consent version, and SHA-256 hash of a random private unsubscribe token. Only a newly inserted signup receives its link; duplicate signups leave the original token intact and do not expose it. Save the link from the first signup. Opening it does not mutate state; its POST confirmation removes the matching row. There is no public subscriber-read or export API, but a caller can infer whether an address is already present from whether a new link is returned; this is a limitation of this initial signup flow. The worker never logs submitted addresses. Forms exclude autocapture, recordings mask inputs, and private pages load no analytics.
+
+**Email sending is not configured.** Signups are a launch list with `status = 'pending'`, not verified subscribers. Before sending a newsletter, configure a sender, email ownership confirmation, bounce handling, and email unsubscribe links. Confirm addresses before regular campaigns. Do not change pending rows to confirmed merely because the form was submitted. See `/privacy` for the reader-facing explanation.
+
+```bash
+pnpm newsletter:migrate:local
+pnpm build
+pnpm exec wrangler dev --local --port 4321
+# In a second terminal; creates and removes one reserved test address.
+pnpm verify:newsletter http://127.0.0.1:4321 --allow-write
+pnpm deploy:preview
+pnpm verify:newsletter https://styleguidefyi-shell.steventsao.workers.dev --allow-write
+```
+
+Deploy commands apply additive migrations before uploading the Worker. CI does the same before production deployment; its Cloudflare token now also needs D1 edit access to the configured database. Inspect subscriber data only through authorized Cloudflare administration. Never paste addresses or export files into this public repository. Preview responses include `X-Robots-Tag: noindex, nofollow` and keep production canonical URLs.
 
 ## Commands
 
@@ -120,5 +146,13 @@ To try the tools in your own Chrome (149+): enable `chrome://flags/#enable-webmc
 After the checks pass on `main`, the workflow deploys the exact verified `dist/` artifact with Wrangler, then checks production against the built guide/catalog data, captured-source and license hashes, canonical URLs, download headers, section links and 404 behavior. `/deployment.json` reports the deployed commit and build time with `Cache-Control: no-store`; the production check must match the workflow's commit. Main runs are serialized and PR checks can cancel superseded PR runs. Actions are pinned to full commit hashes.
 
 The repository needs an Actions secret named `CLOUDFLARE_API_TOKEN` and an Actions variable named `CLOUDFLARE_ACCOUNT_ID`. Use a dedicated [Cloudflare Workers deployment token](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) scoped to the deployment account and applicable zone; never commit its value or use an interactive OAuth login token in CI. Missing credentials cause an explicit failed deployment. The `production` GitHub environment records deployments.
+
+One-time setup in [GitHub Actions settings](https://github.com/steventsao/styleguidefyi/settings/secrets/actions):
+
+1. Set `CLOUDFLARE_ACCOUNT_ID` as a repository variable for the deployment account.
+2. Save a dedicated Cloudflare API token as the repository secret `CLOUDFLARE_API_TOKEN`. Scope it to the deployment account and `styleguide.fyi` zone, with Workers deployment access, D1 edit access for migrations, and Workers Routes write access for the configured custom domains.
+3. Push or merge to `main`. For a previously failed deployment, choose **Re-run failed jobs** on the latest main workflow to reuse that run's verified artifact.
+
+The production job checks credentials before installing dependencies or modifying Cloudflare. Each successful main run applies the newsletter migration, deploys the verified site artifact and plugin Worker, and checks both live endpoints. Pull request runs never deploy production.
 
 Validate a preview before merging with `pnpm deploy:preview`. To verify an existing build against a deployment, run `pnpm verify:site https://styleguide.fyi --commit <full-sha>`. The existing Chrome WebMCP verifier remains required after tool changes; the HTTP check does not replace browser tool execution.

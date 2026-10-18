@@ -3,11 +3,14 @@ import { Code } from "astro:components";
 import Base from "../layouts/Base.astro";
 import ConsensusTable from "../components/ConsensusTable.astro";
 import ReferenceCatalog from "../components/ReferenceCatalog.astro";
+import Newsletter from "../components/Newsletter.astro";
+import { blogPath, publishedPosts } from "../lib/blog";
 import { styleguide } from "../data/styleguide";
 import { countRules } from "../lib/styleguide";
 import { createTools, shellToolMetadata } from "../lib/webmcp-tools";
 
 const ruleCount = countRules(styleguide);
+const latestPosts = (await publishedPosts()).slice(0, 3);
 // Metadata for the original four tools; page actions are wired in the browser.
 const guideTools = createTools(styleguide, { revealSection() {}, filterRules() {} });
 
@@ -80,9 +83,14 @@ const shellExamples = [
 			<a class="button" href="#webmcp">WebMCP tools</a>
 			<a class="button" href="#references">Style guide references</a>
 			<a class="button" href="/library">Captured guides</a>
+			<a class="button" href="/blog">Read the blog</a>
 		</div>
 	</section>
 
+	<section class="latest-writing" aria-labelledby="latest-writing-title">
+		<div><h2 id="latest-writing-title">From the blog</h2><a href="/blog">All articles</a></div>
+		<ul>{latestPosts.map((post) => <li><a href={blogPath(post)}>{post.data.title}</a></li>)}</ul>
+	</section>
 	<div class="layout" id="rules">
 		<aside class="sidebar" aria-label="Sections">
 			<label class="filter">
@@ -247,6 +255,7 @@ const shellExamples = [
 		</div>
 	</div>
 	<ConsensusTable />
+	<div class="home-newsletter"><Newsletter id="home-newsletter" /></div>
 </Base>
 
 <script>
@@ -254,6 +263,13 @@ const shellExamples = [
 </script>
 
 <style>
+	.latest-writing, .home-newsletter { max-width: var(--page-width); margin: 0 auto; padding: 0 16px 48px; }
+	.latest-writing > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-top: 1px solid var(--border); padding-top: 24px; }
+	.latest-writing h2 { margin: 0; font-size: 1.125rem; font-weight: 500; }
+	.latest-writing > div > a { font-size: 0.875rem; color: var(--text-secondary); }
+	.latest-writing ul { list-style: none; margin: 16px 0 0; padding: 0; }
+	.latest-writing li { padding: 8px 0; }
+	.home-newsletter { padding-top: 64px; padding-bottom: 0; }
 	.hero {
 		max-width: var(--page-width);
 		margin: 0 auto;

@@ -1,0 +1,491 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T05:20:01.401Z",
+  "title": "Design System: styleguide.fyi",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "displayName": "Warm page ground",
+        "tonalRamp": [
+          "oklch(15.00% 0.00411 91.45)",
+          "oklch(26.43% 0.00411 91.45)",
+          "oklch(37.86% 0.00411 91.45)",
+          "oklch(49.29% 0.00411 91.45)",
+          "oklch(60.71% 0.00411 91.45)",
+          "oklch(72.14% 0.00411 91.45)",
+          "oklch(83.57% 0.00411 91.45)",
+          "oklch(95.00% 0.00411 91.45)"
+        ],
+        "role": "neutral"
+      },
+      "bg-raised": {
+        "displayName": "Raised surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.00% 0.00000 0.00)"
+        ],
+        "role": "neutral"
+      },
+      "text": {
+        "displayName": "Primary text",
+        "tonalRamp": [
+          "oklch(15.00% 0.00412 84.59)",
+          "oklch(26.43% 0.00412 84.59)",
+          "oklch(37.86% 0.00412 84.59)",
+          "oklch(49.29% 0.00412 84.59)",
+          "oklch(60.71% 0.00412 84.59)",
+          "oklch(72.14% 0.00412 84.59)",
+          "oklch(83.57% 0.00412 84.59)",
+          "oklch(95.00% 0.00412 84.59)"
+        ],
+        "role": "neutral"
+      },
+      "text-secondary": {
+        "displayName": "Secondary text",
+        "tonalRamp": [
+          "oklch(15.00% 0.01041 84.59)",
+          "oklch(26.43% 0.01041 84.59)",
+          "oklch(37.86% 0.01041 84.59)",
+          "oklch(49.29% 0.01041 84.59)",
+          "oklch(60.71% 0.01041 84.59)",
+          "oklch(72.14% 0.01041 84.59)",
+          "oklch(83.57% 0.01041 84.59)",
+          "oklch(95.00% 0.01041 84.59)"
+        ],
+        "role": "neutral"
+      },
+      "muted": {
+        "displayName": "Muted detail",
+        "tonalRamp": [
+          "oklch(15.00% 0.01274 84.59)",
+          "oklch(26.43% 0.01274 84.59)",
+          "oklch(37.86% 0.01274 84.59)",
+          "oklch(49.29% 0.01274 84.59)",
+          "oklch(60.71% 0.01274 84.59)",
+          "oklch(72.14% 0.01274 84.59)",
+          "oklch(83.57% 0.01274 84.59)",
+          "oklch(95.00% 0.01274 84.59)"
+        ],
+        "role": "neutral"
+      },
+      "border": {
+        "displayName": "Dividing line",
+        "tonalRamp": [
+          "oklch(15.00% 0.01162 84.58)",
+          "oklch(26.43% 0.01162 84.58)",
+          "oklch(37.86% 0.01162 84.58)",
+          "oklch(49.29% 0.01162 84.58)",
+          "oklch(60.71% 0.01162 84.58)",
+          "oklch(72.14% 0.01162 84.58)",
+          "oklch(83.57% 0.01162 84.58)",
+          "oklch(95.00% 0.01162 84.58)"
+        ],
+        "role": "neutral"
+      },
+      "accent": {
+        "displayName": "Orange accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.17386 38.40)",
+          "oklch(26.43% 0.17386 38.40)",
+          "oklch(37.86% 0.17386 38.40)",
+          "oklch(49.29% 0.17386 38.40)",
+          "oklch(60.71% 0.17386 38.40)",
+          "oklch(72.14% 0.17386 38.40)",
+          "oklch(83.57% 0.17386 38.40)",
+          "oklch(95.00% 0.17386 38.40)"
+        ],
+        "role": "primary"
+      },
+      "accent-soft": {
+        "displayName": "Soft orange emphasis",
+        "tonalRamp": [
+          "oklch(15.00% 0.02456 53.69)",
+          "oklch(26.43% 0.02456 53.69)",
+          "oklch(37.86% 0.02456 53.69)",
+          "oklch(49.29% 0.02456 53.69)",
+          "oklch(60.71% 0.02456 53.69)",
+          "oklch(72.14% 0.02456 53.69)",
+          "oklch(83.57% 0.02456 53.69)",
+          "oklch(95.00% 0.02456 53.69)"
+        ],
+        "role": "primary"
+      },
+      "avoid": {
+        "displayName": "Avoid or error",
+        "tonalRamp": [
+          "oklch(15.00% 0.18205 29.51)",
+          "oklch(26.43% 0.18205 29.51)",
+          "oklch(37.86% 0.18205 29.51)",
+          "oklch(49.29% 0.18205 29.51)",
+          "oklch(60.71% 0.18205 29.51)",
+          "oklch(72.14% 0.18205 29.51)",
+          "oklch(83.57% 0.18205 29.51)",
+          "oklch(95.00% 0.18205 29.51)"
+        ]
+      },
+      "prefer": {
+        "displayName": "Prefer or agreement",
+        "tonalRamp": [
+          "oklch(15.00% 0.11676 157.07)",
+          "oklch(26.43% 0.11676 157.07)",
+          "oklch(37.86% 0.11676 157.07)",
+          "oklch(49.29% 0.11676 157.07)",
+          "oklch(60.71% 0.11676 157.07)",
+          "oklch(72.14% 0.11676 157.07)",
+          "oklch(83.57% 0.11676 157.07)",
+          "oklch(95.00% 0.11676 157.07)"
+        ]
+      },
+      "code-bg": {
+        "displayName": "Code surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.00825 91.48)",
+          "oklch(26.43% 0.00825 91.48)",
+          "oklch(37.86% 0.00825 91.48)",
+          "oklch(49.29% 0.00825 91.48)",
+          "oklch(60.71% 0.00825 91.48)",
+          "oklch(72.14% 0.00825 91.48)",
+          "oklch(83.57% 0.00825 91.48)",
+          "oklch(95.00% 0.00825 91.48)"
+        ],
+        "role": "neutral"
+      },
+      "bg-dark": {
+        "displayName": "Warm page ground (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.00400 106.79)",
+          "oklch(26.43% 0.00400 106.79)",
+          "oklch(37.86% 0.00400 106.79)",
+          "oklch(49.29% 0.00400 106.79)",
+          "oklch(60.71% 0.00400 106.79)",
+          "oklch(72.14% 0.00400 106.79)",
+          "oklch(83.57% 0.00400 106.79)",
+          "oklch(95.00% 0.00400 106.79)"
+        ],
+        "role": "neutral"
+      },
+      "bg-raised-dark": {
+        "displayName": "Raised surface (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.00416 84.59)",
+          "oklch(26.43% 0.00416 84.59)",
+          "oklch(37.86% 0.00416 84.59)",
+          "oklch(49.29% 0.00416 84.59)",
+          "oklch(60.71% 0.00416 84.59)",
+          "oklch(72.14% 0.00416 84.59)",
+          "oklch(83.57% 0.00416 84.59)",
+          "oklch(95.00% 0.00416 84.59)"
+        ],
+        "role": "neutral"
+      },
+      "text-dark": {
+        "displayName": "Primary text (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.00991 87.47)",
+          "oklch(26.43% 0.00991 87.47)",
+          "oklch(37.86% 0.00991 87.47)",
+          "oklch(49.29% 0.00991 87.47)",
+          "oklch(60.71% 0.00991 87.47)",
+          "oklch(72.14% 0.00991 87.47)",
+          "oklch(83.57% 0.00991 87.47)",
+          "oklch(95.00% 0.00991 87.47)"
+        ],
+        "role": "neutral"
+      },
+      "text-secondary-dark": {
+        "displayName": "Secondary text (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.01648 86.44)",
+          "oklch(26.43% 0.01648 86.44)",
+          "oklch(37.86% 0.01648 86.44)",
+          "oklch(49.29% 0.01648 86.44)",
+          "oklch(60.71% 0.01648 86.44)",
+          "oklch(72.14% 0.01648 86.44)",
+          "oklch(83.57% 0.01648 86.44)",
+          "oklch(95.00% 0.01648 86.44)"
+        ],
+        "role": "neutral"
+      },
+      "muted-dark": {
+        "displayName": "Muted detail (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.01575 88.74)",
+          "oklch(26.43% 0.01575 88.74)",
+          "oklch(37.86% 0.01575 88.74)",
+          "oklch(49.29% 0.01575 88.74)",
+          "oklch(60.71% 0.01575 88.74)",
+          "oklch(72.14% 0.01575 88.74)",
+          "oklch(83.57% 0.01575 88.74)",
+          "oklch(95.00% 0.01575 88.74)"
+        ],
+        "role": "neutral"
+      },
+      "border-dark": {
+        "displayName": "Dividing line (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.00772 84.59)",
+          "oklch(26.43% 0.00772 84.59)",
+          "oklch(37.86% 0.00772 84.59)",
+          "oklch(49.29% 0.00772 84.59)",
+          "oklch(60.71% 0.00772 84.59)",
+          "oklch(72.14% 0.00772 84.59)",
+          "oklch(83.57% 0.00772 84.59)",
+          "oklch(95.00% 0.00772 84.59)"
+        ],
+        "role": "neutral"
+      },
+      "accent-dark": {
+        "displayName": "Orange accent (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.15904 55.93)",
+          "oklch(26.43% 0.15904 55.93)",
+          "oklch(37.86% 0.15904 55.93)",
+          "oklch(49.29% 0.15904 55.93)",
+          "oklch(60.71% 0.15904 55.93)",
+          "oklch(72.14% 0.15904 55.93)",
+          "oklch(83.57% 0.15904 55.93)",
+          "oklch(95.00% 0.15904 55.93)"
+        ],
+        "role": "primary"
+      },
+      "accent-soft-dark": {
+        "displayName": "Soft orange emphasis (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.03494 57.69)",
+          "oklch(26.43% 0.03494 57.69)",
+          "oklch(37.86% 0.03494 57.69)",
+          "oklch(49.29% 0.03494 57.69)",
+          "oklch(60.71% 0.03494 57.69)",
+          "oklch(72.14% 0.03494 57.69)",
+          "oklch(83.57% 0.03494 57.69)",
+          "oklch(95.00% 0.03494 57.69)"
+        ],
+        "role": "primary"
+      },
+      "avoid-dark": {
+        "displayName": "Avoid or error (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.16992 26.47)",
+          "oklch(26.43% 0.16992 26.47)",
+          "oklch(37.86% 0.16992 26.47)",
+          "oklch(49.29% 0.16992 26.47)",
+          "oklch(60.71% 0.16992 26.47)",
+          "oklch(72.14% 0.16992 26.47)",
+          "oklch(83.57% 0.16992 26.47)",
+          "oklch(95.00% 0.16992 26.47)"
+        ]
+      },
+      "prefer-dark": {
+        "displayName": "Prefer or agreement (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.15272 157.18)",
+          "oklch(26.43% 0.15272 157.18)",
+          "oklch(37.86% 0.15272 157.18)",
+          "oklch(49.29% 0.15272 157.18)",
+          "oklch(60.71% 0.15272 157.18)",
+          "oklch(72.14% 0.15272 157.18)",
+          "oklch(83.57% 0.15272 157.18)",
+          "oklch(95.00% 0.15272 157.18)"
+        ]
+      },
+      "code-bg-dark": {
+        "displayName": "Code surface (dark)",
+        "tonalRamp": [
+          "oklch(15.00% 0.00416 84.59)",
+          "oklch(26.43% 0.00416 84.59)",
+          "oklch(37.86% 0.00416 84.59)",
+          "oklch(49.29% 0.00416 84.59)",
+          "oklch(60.71% 0.00416 84.59)",
+          "oklch(72.14% 0.00416 84.59)",
+          "oklch(83.57% 0.00416 84.59)",
+          "oklch(95.00% 0.00416 84.59)"
+        ],
+        "role": "neutral"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Guide display",
+        "purpose": "The incumbent guide opening."
+      },
+      "display-blog": {
+        "displayName": "Blog display",
+        "purpose": "The implemented blog index headline."
+      },
+      "headline-article": {
+        "displayName": "Article headline",
+        "purpose": "Long-form article titles."
+      },
+      "title": {
+        "displayName": "Reading title",
+        "purpose": "Article-index titles and newsletter headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Shared prose and control default."
+      },
+      "body-article": {
+        "displayName": "Article body",
+        "purpose": "Long-form reading at a 70ch maximum measure."
+      },
+      "label": {
+        "displayName": "Control label",
+        "purpose": "The shared medium-weight button label."
+      },
+      "code": {
+        "displayName": "Guide code",
+        "purpose": "Code examples in the established mono family."
+      }
+    },
+    "shadows": [
+      {
+        "name": "rule-reveal",
+        "value": "0 0 0 12px var(--accent-soft)",
+        "purpose": "A spread of the highlight surface around a revealed guide target, not raised elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "anchor-scroll",
+        "value": "smooth",
+        "purpose": "HTML anchor scrolling; prefers-reduced-motion: reduce switches it to auto."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "guide-single-column",
+        "value": "860px"
+      },
+      {
+        "name": "header-secondary-links",
+        "value": "820px"
+      },
+      {
+        "name": "article-single-column",
+        "value": "760px"
+      },
+      {
+        "name": "newsletter-stack",
+        "value": "720px"
+      },
+      {
+        "name": "blog-rows-and-consensus",
+        "value": "640px"
+      },
+      {
+        "name": "article-toc-one-column",
+        "value": "440px"
+      },
+      {
+        "name": "compact-header",
+        "value": "420px"
+      },
+      {
+        "name": "newsletter-fields-stack",
+        "value": "380px"
+      },
+      {
+        "name": "compact-wordmark",
+        "value": "360px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Shared primary action, shown with the newsletter height and disabled state.",
+      "html": "<button class=\"ds-button ds-button-primary\" type=\"button\">Join the list</button>",
+      "css": ".ds-button { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif); font-size: 0.875rem; line-height: 1.6; font-weight: 500; color: var(--text, #1c1b19); background: var(--bg-raised, #ffffff); border: 1px solid var(--border, #e4e0d8); border-radius: var(--radius, 6px); text-decoration: none; cursor: pointer; } .ds-button:hover { color: var(--accent, #c2410c); border-color: var(--accent, #c2410c); } .ds-button:focus-visible { outline: 2px solid var(--accent, #c2410c); outline-offset: 2px; } .ds-button-primary { min-height: 46px; justify-content: center; color: var(--bg, #fbfaf7); background: var(--text, #1c1b19); border-color: var(--text, #1c1b19); } .ds-button-primary:hover { color: var(--bg, #fbfaf7); background: var(--accent, #c2410c); border-color: var(--accent, #c2410c); } .ds-button-primary:disabled { opacity: 0.65; cursor: wait; }"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Shared bordered action used throughout the guide.",
+      "html": "<button class=\"ds-button\" type=\"button\">Copy markdown</button>",
+      "css": ".ds-button { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif); font-size: 0.875rem; line-height: 1.6; font-weight: 500; color: var(--text, #1c1b19); background: var(--bg-raised, #ffffff); border: 1px solid var(--border, #e4e0d8); border-radius: var(--radius, 6px); text-decoration: none; cursor: pointer; } .ds-button:hover { color: var(--accent, #c2410c); border-color: var(--accent, #c2410c); } .ds-button:focus-visible { outline: 2px solid var(--accent, #c2410c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Email field",
+      "kind": "input",
+      "refersTo": "email-input",
+      "description": "Newsletter field with its visible label and shared focus treatment.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-email\">Email address</label><input class=\"ds-email\" id=\"ds-email\" type=\"email\" autocomplete=\"email\" placeholder=\"you@example.com\" required /></div>",
+      "css": ".ds-field { font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif); color: var(--text, #1c1b19); max-width: 360px; } .ds-field-label { display: block; margin-bottom: 8px; font-weight: 500; line-height: 1.6; } .ds-email { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid var(--border, #e4e0d8); border-radius: var(--radius, 6px); color: var(--text, #1c1b19); background: var(--bg-raised, #ffffff); font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif); font-size: 1rem; line-height: 1.6; accent-color: var(--accent, #c2410c); caret-color: var(--accent, #c2410c); } .ds-email::placeholder { color: var(--text-secondary, #55524c); opacity: 1; } .ds-email:focus-visible { outline: 2px solid var(--accent, #c2410c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Reading navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "The established mono wordmark and text navigation; secondary links collapse with the page header.",
+      "html": "<header class=\"ds-header\"><a class=\"ds-wordmark\" href=\"/\">styleguide<span class=\"ds-wordmark-suffix\">.fyi</span></a><nav class=\"ds-nav\" aria-label=\"Main\"><a class=\"ds-nav-link\" href=\"/blog\">Blog</a><a class=\"ds-nav-link\" href=\"/#rules\">Rules</a><a class=\"ds-nav-link\" href=\"/newsletter\">Newsletter</a></nav></header>",
+      "css": ".ds-header { min-height: var(--header-height, 56px); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--border, #e4e0d8); background: color-mix(in srgb, var(--bg, #fbfaf7) 88%, transparent); backdrop-filter: blur(8px); color: var(--text, #1c1b19); font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif); } .ds-wordmark { color: inherit; font-family: var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace); font-weight: 600; text-decoration: none; } .ds-wordmark-suffix { color: var(--accent, #c2410c); } .ds-nav { display: flex; align-items: center; gap: 16px; font-size: 0.875rem; } .ds-nav-link { color: var(--text-secondary, #55524c); text-decoration: none; white-space: nowrap; } .ds-nav-link:hover, .ds-wordmark:hover { color: var(--accent, #c2410c); } .ds-nav-link:focus-visible { outline: 2px solid var(--accent, #c2410c); outline-offset: 2px; } .ds-wordmark:focus-visible { outline: 2px solid var(--accent, #c2410c); outline-offset: 2px; } @media (max-width: 420px) { .ds-header { gap: 8px; } .ds-nav { gap: 10px; font-size: 0.8125rem; } } @media (max-width: 360px) { .ds-wordmark { font-size: 0.875rem; } }"
+    },
+    {
+      "name": "Rating disclosure",
+      "kind": "chip",
+      "refersTo": "rating",
+      "description": "A text-labelled agreement badge opens its rationale; neutral and stale source variants use dashed borders.",
+      "html": "<details class=\"ds-rating-details\"><summary class=\"ds-rating\"><span class=\"ds-rating-label\">Somewhat agree</span><span class=\"ds-disclosure\" aria-hidden=\"true\">⌄</span></summary><p class=\"ds-rationale\">The reviewer’s explanation appears here.</p></details>",
+      "css": ".ds-rating-details { max-width: 220px; font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif); } .ds-rating { --tone: var(--prefer, #067647); display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 9px 10px; border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--border, #e4e0d8)); border-radius: 4px; background: color-mix(in srgb, var(--tone) 10%, var(--bg-raised, #ffffff)); color: var(--tone); font-size: 0.8125rem; line-height: 1.35; font-weight: 500; list-style: none; cursor: pointer; } .ds-rating::-webkit-details-marker { display: none; } .ds-disclosure { font-size: 0.75rem; } .ds-rating-details[open] .ds-disclosure { transform: rotate(180deg); } .ds-rationale { margin: 10px 0 0; font-size: 0.75rem; line-height: 1.6; overflow-wrap: anywhere; color: var(--text-secondary, #55524c); } .ds-rating:focus-visible { outline: 2px solid var(--accent, #c2410c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Code example",
+      "kind": "card",
+      "refersTo": "code-example",
+      "description": "Flat guide code container; semantic examples pair the label and left edge with prefer or avoid.",
+      "html": "<figure class=\"ds-example\"><figcaption class=\"ds-caption\">Example</figcaption><pre class=\"ds-code\"><code class=\"ds-code-text\">const posts = await publishedPosts();</code></pre></figure>",
+      "css": ".ds-example { margin: 0; min-width: 0; border: 1px solid var(--border, #e4e0d8); border-left: 3px solid var(--muted, #8a867e); border-radius: var(--radius, 6px); background: var(--code-bg, #f4f2ec); overflow: hidden; color: var(--text, #1c1b19); } .ds-caption { padding: 6px 14px 0; font-family: var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; } .ds-code { margin: 0; padding: 10px 14px 12px; font-family: var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace); font-size: 0.8125rem; line-height: 1.6; overflow-x: auto; } .ds-code-text { font-family: var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace); }"
+    },
+    {
+      "name": "Article row",
+      "kind": "custom",
+      "refersTo": "article-row",
+      "description": "The blog’s border-separated reading list, using the incumbent fonts, palette, and link treatment.",
+      "html": "<article class=\"ds-post\"><div class=\"ds-meta\"><span class=\"ds-category\">Coding practices</span><span class=\"ds-read-time\">Article</span></div><div class=\"ds-post-content\"><h3 class=\"ds-post-title\"><a class=\"ds-title-link\" href=\"/blog\">Better code. Considered choices.</a></h3><p class=\"ds-post-summary\">Notes on the decisions behind readable, reliable software.</p><a class=\"ds-read-link\" href=\"/blog\">Read article<svg class=\"ds-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"M4 10h12M11 5l5 5-5 5\" /></svg></a></div></article>",
+      "css": ".ds-post { display: grid; grid-template-columns: 180px 1fr; gap: 36px; padding: 36px 0; border-bottom: 1px solid var(--border, #e4e0d8); color: var(--text, #1c1b19); font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif); line-height: 1.6; } .ds-meta { display: flex; flex-direction: column; gap: 4px; color: var(--text-secondary, #55524c); font-size: 0.875rem; } .ds-category { color: var(--accent, #c2410c); font-weight: 500; margin-bottom: 10px; } .ds-post-title { margin: 0 0 12px; max-width: 35ch; font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; } .ds-title-link { color: inherit; text-decoration: none; } .ds-post-summary { max-width: 64ch; color: var(--text-secondary, #55524c); margin: 0 0 20px; } .ds-read-link { display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem; color: inherit; text-decoration-color: var(--muted, #8a867e); text-underline-offset: 3px; } .ds-title-link:hover, .ds-read-link:hover { color: var(--accent, #c2410c); text-decoration-color: currentColor; } .ds-title-link:focus-visible { outline: 2px solid var(--accent, #c2410c); outline-offset: 2px; } .ds-read-link:focus-visible { outline: 2px solid var(--accent, #c2410c); outline-offset: 2px; } @media (max-width: 640px) { .ds-post { grid-template-columns: 1fr; gap: 16px; padding: 28px 0; } .ds-meta { flex-direction: row; flex-wrap: wrap; gap: 6px 16px; } .ds-category { margin-bottom: 0; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A working coding guide",
+    "overview": "Readable text, concrete code examples, and visible source links define this site. IBM Plex Sans carries explanations; IBM Plex Mono identifies code and the wordmark. Warm neutral surfaces and restrained orange accents carry the same identity in light and dark appearances.\n\nThe guide, article index, long articles, and newsletter use the same shell and controls. Reading pages may adjust headline scale, line length, and column structure to suit their content. This record describes the implemented site; it does not authorize a new brand, a redesign, or changes to captured external guides.",
+    "keyCharacteristics": [
+      "Text leads, with code and source attribution close to the explanation.",
+      "Warm light and dark neutrals share one orange interaction accent.",
+      "Fine borders and spacing organize flat surfaces.",
+      "Forms use visible labels, native controls, and direct status text."
+    ],
+    "rules": [
+      {
+        "name": "The Shared Palette Rule",
+        "body": "New reading surfaces use the shared CSS variables so their text, borders, controls, and interaction states follow both appearances together.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Fonts Rule",
+        "body": "Keep prose in the sans family and code, technical labels, and the wordmark in the mono family.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do reuse the shared palette, font variables, buttons, and focus treatment in both color schemes.",
+      "Do keep readable line lengths and let editorial layouts collapse to a clear single reading order.",
+      "Do keep semantic labels beside their colors and visible labels beside form controls.",
+      "Do preserve source links, rule anchors, and honest wording about what the product can do."
+    ],
+    "donts": [
+      "Don't add a new font, palette, shadow system, or card treatment as part of an ordinary extension.",
+      "Don't replace the guide's established heading and field variants with the blog's larger reading variants.",
+      "Don't present generated tonal-ramp previews as additional application colors.",
+      "Don't invent endorsements, subscriber counts, author credentials, or delivery capabilities."
+    ]
+  }
+}

@@ -65,6 +65,7 @@ jobs:
       - name: Verify built site through the local Cloudflare runtime
         shell: bash
         run: |
+          pnpm newsletter:migrate:local
           pnpm exec wrangler dev --local --config wrangler.jsonc --ip 127.0.0.1 --port 4321 > /tmp/styleguide-preview.log 2>&1 &
           preview_pid=$!
           trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
@@ -81,6 +82,7 @@ jobs:
             exit 1
           fi
           pnpm verify:site http://127.0.0.1:4321 --commit "$DEPLOY_COMMIT_SHA"
+          pnpm verify:newsletter http://127.0.0.1:4321 --allow-write
         env:
           DEPLOY_COMMIT_SHA: ${{ github.sha }}
           WRANGLER_SEND_METRICS: 'false'
@@ -103,6 +105,29 @@ jobs:
       name: production
       url: https://styleguide.fyi
     steps:
+      - name: Check production credentials
+        shell: bash
+        run: |
+          missing=false
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo '::error::Missing repository secret CLOUDFLARE_API_TOKEN. Add a dedicated Cloudflare deployment token in Settings > Secrets and variables > Actions, then rerun failed jobs.'
+            missing=true
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo '::error::Missing repository variable CLOUDFLARE_ACCOUNT_ID.'
+            missing=true
+          fi
+          if [ "$missing" = true ]; then
+            {
+              echo '### Cloudflare deployment setup required'
+              echo 'Add the missing configuration in [Actions settings](https://github.com/steventsao/styleguidefyi/settings/secrets/actions), then rerun failed jobs.'
+              echo 'The deployment token needs Workers deployment access, D1 edit access for newsletter migrations, and route access for the configured styleguide.fyi custom domains. Use a dedicated API token, not an interactive Wrangler OAuth token.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
@@ -119,8 +144,7 @@ jobs:
       - name: Deploy the verified artifact
         shell: bash
         run: |
-          test -n "$CLOUDFLARE_API_TOKEN" || { echo 'Missing repository secret CLOUDFLARE_API_TOKEN'; exit 1; }
-          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo 'Missing repository variable CLOUDFLARE_ACCOUNT_ID'; exit 1; }
+          pnpm exec wrangler d1 migrations apply NEWSLETTER_DB --remote --config wrangler.jsonc
           pnpm exec wrangler deploy --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

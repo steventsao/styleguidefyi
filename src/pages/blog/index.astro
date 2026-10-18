@@ -1,0 +1,45 @@
+---
+import Base from "../../layouts/Base.astro";
+import Newsletter from "../../components/Newsletter.astro";
+import { blogPath, formatDate, publishedPosts, readingMinutes } from "../../lib/blog";
+const posts = await publishedPosts();
+---
+
+<Base title="Coding practices, TypeScript & code review — styleguide.fyi blog" description="Practical articles on readable code, TypeScript conventions, and better code reviews. Examples and trade-offs connected to the styleguide.fyi coding guide." canonicalPath="/blog" markdownUrl={null} structuredData={[{ "@type": "Blog", "@id": "https://styleguide.fyi/blog#blog", url: "https://styleguide.fyi/blog", name: "styleguide.fyi blog", publisher: { "@id": "https://styleguide.fyi/#publisher" } }]}>
+	<div class="blog-shell">
+		<header class="blog-header">
+			<h1>Better code.<br />Considered choices.</h1>
+			<p>Notes on the decisions behind readable, reliable software. Practical examples, room for disagreement, and a guide you can put to work.</p>
+			<a href="/#rules">Explore the coding guide</a>
+		</header>
+		<section aria-labelledby="articles-title" class="articles">
+			<div class="articles-heading"><h2 id="articles-title">Latest articles</h2><a href="/rss.xml">RSS feed</a></div>
+			{posts.map((post) => <article class="post-row">
+				<div class="post-meta"><span>{post.data.category}</span><time datetime={post.data.published.toISOString()}>{formatDate(post.data.published)}</time><span>{readingMinutes(post.body)} min read</span></div>
+				<div><h3><a href={blogPath(post)}>{post.data.title}</a></h3><p>{post.data.description}</p><a class="read-article" href={blogPath(post)}>Read article<span class="sr-only">: {post.data.title}</span><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5" /></svg></a></div>
+			</article>)}
+		</section>
+		<Newsletter />
+	</div>
+</Base>
+
+<style>
+	.blog-shell { max-width: var(--page-width); margin: 0 auto; padding: 64px 24px 0; }
+	.blog-header { padding-bottom: 56px; }
+	h1 { max-width: 18ch; margin: 0 0 24px; font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 600; line-height: 1.06; letter-spacing: -0.035em; }
+	.blog-header > p { max-width: 58ch; font-size: 1.125rem; color: var(--text-secondary); margin: 0 0 20px; }
+	.blog-header > a { color: var(--accent); }
+	.articles { margin-bottom: 64px; }
+	.articles-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+	.articles-heading h2 { margin: 0; font-size: 1.125rem; font-weight: 500; }
+	.articles-heading > a { font-size: 0.875rem; color: var(--text-secondary); }
+	.post-row { display: grid; grid-template-columns: 180px 1fr; gap: 36px; padding: 36px 0; border-bottom: 1px solid var(--border); }
+	.post-meta { display: flex; flex-direction: column; gap: 4px; color: var(--text-secondary); font-size: 0.875rem; }
+	.post-meta > span:first-child { color: var(--accent); font-weight: 500; margin-bottom: 10px; }
+	h3 { margin: 0 0 12px; max-width: 35ch; font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+	h3 a { text-decoration: none; }
+	.post-row p { max-width: 64ch; color: var(--text-secondary); margin: 0 0 20px; }
+	.read-article { display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem; }
+	.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+	@media (max-width: 640px) { .blog-shell { padding: 40px 20px 0; } .blog-header { padding-bottom: 40px; } .post-row { grid-template-columns: 1fr; gap: 16px; padding: 28px 0; } .post-meta { flex-direction: row; flex-wrap: wrap; gap: 6px 16px; } .post-meta > span:first-child { margin-bottom: 0; } }
+</style>

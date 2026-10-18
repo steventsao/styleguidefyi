@@ -1,0 +1,26 @@
+---
+import Base from "../../layouts/Base.astro";
+---
+<Base title="Unsubscribe — styleguide.fyi" description="Remove your address from the styleguide.fyi newsletter launch list using your private link." canonicalPath="/newsletter/unsubscribe" markdownUrl={null} noindex analytics={false}>
+	<div class="unsubscribe-page"><h1>Leave the newsletter list.</h1><p>Use the private link shown when you signed up. Confirming below removes the signup associated with that link.</p><form action="/api/newsletter/unsubscribe" method="post" data-newsletter class="ph-no-capture ph-mask"><label for="unsubscribe-token">Private unsubscribe code</label><input id="unsubscribe-token" type="text" name="token" pattern="[a-f0-9]{64}" minlength="64" maxlength="64" autocomplete="off" required aria-describedby="token-help" /><p id="token-help">The 64-character code after # in your saved link. It fills in automatically when JavaScript is available.</p><button type="submit" class="button button-primary">Remove my signup</button><p role="status" tabindex="-1" aria-live="polite" data-newsletter-status hidden></p></form><p><a href="/blog">Back to the blog</a> · <a href="/privacy">Privacy details</a></p></div>
+</Base>
+<script>
+	import "../../scripts/newsletter";
+	const code = window.location.hash.slice(1);
+	if (/^[a-f0-9]{64}$/.test(code)) {
+		const input = document.querySelector<HTMLInputElement>("#unsubscribe-token");
+		if (input) input.value = code;
+	}
+</script>
+<style>
+	.unsubscribe-page { max-width: 68ch; margin: 0 auto; padding: 56px 24px 0; }
+	h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.15; font-weight: 600; }
+	p { color: var(--text-secondary); }
+	form { margin: 32px 0; }
+	label { display: block; margin-bottom: 8px; }
+	input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-raised); color: var(--text); font: inherit; }
+	#token-help { font-size: 0.875rem; }
+	button { min-height: 44px; }
+	button:disabled { opacity: 0.65; cursor: wait; }
+	[data-error] { color: var(--avoid); }
+</style>

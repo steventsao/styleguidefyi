@@ -1,0 +1,13 @@
+---
+import Base from "../../layouts/Base.astro";
+import Newsletter from "../../components/Newsletter.astro";
+---
+<Base title="Newsletter — styleguide.fyi" description="Join the styleguide.fyi newsletter launch list for practical coding articles, TypeScript examples, and noteworthy changes to the guide." canonicalPath="/newsletter" markdownUrl={null} analytics={false}>
+	<div class="newsletter-page"><h1>A little more thought.<br />A little better code.</h1><p class="intro">Stay close to the ideas behind the guide: code review, readable TypeScript, and the trade-offs that deserve a second look.</p><Newsletter /><p class="afterword">The articles are always free to read on the <a href="/blog">blog</a>. RSS is available now; email delivery is still to come.</p></div>
+</Base>
+<style>
+	.newsletter-page { max-width: var(--page-width); margin: 0 auto; padding: 64px 24px 0; }
+	h1 { font-size: clamp(2.25rem, 5vw, 3.5rem); font-weight: 600; line-height: 1.1; letter-spacing: -0.03em; margin: 0 0 24px; }
+	.intro { font-size: 1.125rem; max-width: 60ch; color: var(--text-secondary); margin: 0 0 48px; }
+	.afterword { margin-top: 24px; color: var(--text-secondary); font-size: 0.875rem; }
+</style>

@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { parseArgs } from "node:util";
 import { setTimeout } from "node:timers/promises";
 import { load } from "cheerio";
+import { verifyBlog } from "./verify-blog.mjs";
 
 const { values, positionals } = parseArgs({ options: { commit: { type: "string" } }, allowPositionals: true });
 assert.ok(positionals.length <= 1, "Usage: node scripts/verify-site.mjs [url] [--commit <full-sha>]");
@@ -89,4 +90,5 @@ for (const path of ["styleguide.md", "consensus.json", "references.md", "referen
 	assert.equal(checksum(await (await get(`/${path}`)).text()), checksum(local), `${path}: built content checksum`);
 }
 await get("/missing-org/missing-repo", 404);
-console.log(JSON.stringify({ origin: base.origin, revision: values.commit ?? "not asserted", requests, captures: captures.length, readersAndCollections: pages.size, licenses: licenses.length, result: "passed" }, null, 2));
+const articles = await verifyBlog(get, home);
+console.log(JSON.stringify({ origin: base.origin, revision: values.commit ?? "not asserted", requests, captures: captures.length, readersAndCollections: pages.size, licenses: licenses.length, articles, result: "passed" }, null, 2));

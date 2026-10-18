@@ -1,4 +1,4 @@
-styleguide.fyi is a static Astro site: a coding style guide exposed to browser agents over WebMCP, plus a catalog and captured public guides. Cloudflare Workers serves `dist/` as static assets. A separate read-only MCP Worker serves the OpenAI plugin app and tools from the same guide data. There is no database or CMS. PostHog measures the pages from the browser.
+styleguide.fyi uses Astro for static reading pages: a coding guide exposed to browser agents over WebMCP, original blog articles, and a catalog of captured public guides. Cloudflare serves `dist/` as static assets; a small Worker handles `/api/newsletter` and private-link removal using D1. A separate read-only MCP Worker serves the OpenAI plugin. There is no CMS. PostHog measures reading pages from the browser; newsletter forms and private pages exclude submitted data from capture.
 
 ## Commands
 
@@ -53,6 +53,11 @@ Copy `.env.example` to `.env` before the first build, and put the real PostHog t
 | `scripts/fixtures/exec-cases.json` | Reviewed `exec` results; `guide-tool-cases.json` preserves the four original tools. Both feed unit/live checks |
 
 ## Rules
+
+- Blog posts live in `src/content/blog/*.md`, validated by `src/content.config.ts`. Use original writing, stable slugs, explicit dates, real sources, and valid `relatedRules`. Draft/future posts are excluded from routes and RSS.
+- Newsletter signups remain `pending`: no email sender or ownership verification is configured. Do not send campaigns to pending addresses. Never expose subscriber data in public endpoints, logs, fixtures, or analytics.
+- Preview and production use separate newsletter databases. Apply D1 migrations before deployment. `pnpm verify:newsletter <local-or-preview-origin> --allow-write` creates and removes a reserved test signup; it refuses production.
+- Preserve `noindex` on unsubscribe pages and all preview responses. Only canonical reading pages belong in the sitemap; Markdown remains discoverable through alternate links and `llms.txt`.
 
 - To change the guide, edit `src/data/styleguide.ts` only. Rule ids are public URL anchors and WebMCP lookup keys: do not rename them.
 - Reviewers fill only their own `reviews` entry. `null` means Not rated, never Neutral. Record the current `ruleFingerprint(rule)` as `reviewedHash` only after assessing the wording; do not refresh other reviewers' hashes after editing a rule. Stale assessments must remain Needs review until reassessed.

@@ -1,0 +1,12 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base title="About the guide and blog — styleguide.fyi" description="How styleguide.fyi develops practical coding advice, publishes articles, and distinguishes original writing from captured public style guides." canonicalPath="/about" markdownUrl={null}>
+	<article class="about-page"><h1>Advice you can inspect.</h1><p>styleguide.fyi is a public coding guide for people and agents. It pairs proposed rules with reasons, examples, and independent reviewer assessments.</p><h2>What the blog adds</h2><p>The <a href="/blog">blog</a> works through the decisions behind the rules: choosing conventions, reviewing changes, and handling trade-offs. Articles are published under the styleguide.fyi name. Writing and implementation may be assisted by AI; an article is not an independent Astra or Fable assessment.</p><h2>Sources and corrections</h2><p>Original articles link to relevant rules and primary sources. The <a href="/library">captured library</a> is separate: those documents belong to their credited authors and retain their source and license information. A citation is not an endorsement by that author.</p><p>The source for each article is available in the <a href="https://github.com/steventsao/styleguidefyi/tree/main/src/content/blog">public repository</a>. To suggest a correction, <a href="https://github.com/steventsao/styleguidefyi/issues">open an issue</a> with the article URL and the specific claim or example.</p><h2>Dates and changes</h2><p>Articles show their publication date and, after a substantive revision, an update date. Guide reviews track the wording they assessed. Editing a rule can make a previous review stale; it does not silently renew that review.</p><p><a href="/newsletter">Join the newsletter launch list</a> or <a href="/rss.xml">follow the blog via RSS</a>.</p></article>
+</Base>
+<style>
+	.about-page { max-width: 72ch; margin: 0 auto; padding: 56px 24px 0; }
+	h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.15; font-weight: 600; letter-spacing: -0.025em; }
+	h2 { margin-top: 40px; font-size: 1.5rem; font-weight: 600; }
+	p { color: var(--text-secondary); }
+</style>

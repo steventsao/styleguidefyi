@@ -2,11 +2,16 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "styleguidefyi",
 	"compatibility_date": "2026-02-24",
-	// Static site: `astro build` writes to ./dist and the Worker only serves those files.
+	"main": "src/newsletter/worker.ts",
+	// Reading pages remain static. Only newsletter requests invoke the Worker.
 	"assets": {
 		"directory": "./dist",
 		"not_found_handling": "404-page",
+		"binding": "ASSETS",
+		"run_worker_first": ["/api/*"],
 	},
+	"d1_databases": [{ "binding": "NEWSLETTER_DB", "database_name": "styleguidefyi-newsletter", "database_id": "0ccf9cad-afb1-4213-89da-c38a1d9057f3", "migrations_dir": "migrations" }],
+	"ratelimits": [{ "name": "NEWSLETTER_LIMITER", "namespace_id": "2026101701", "simple": { "limit": 10, "period": 60 } }],
 	"routes": [
 		{ "pattern": "styleguide.fyi", "custom_domain": true },
 		{ "pattern": "www.styleguide.fyi", "custom_domain": true },
