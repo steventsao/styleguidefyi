@@ -147,4 +147,12 @@ After the checks pass on `main`, the workflow deploys the exact verified `dist/`
 
 The repository needs an Actions secret named `CLOUDFLARE_API_TOKEN` and an Actions variable named `CLOUDFLARE_ACCOUNT_ID`. Use a dedicated [Cloudflare Workers deployment token](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) scoped to the deployment account and applicable zone; never commit its value or use an interactive OAuth login token in CI. Missing credentials cause an explicit failed deployment. The `production` GitHub environment records deployments.
 
+One-time setup in [GitHub Actions settings](https://github.com/steventsao/styleguidefyi/settings/secrets/actions):
+
+1. Set `CLOUDFLARE_ACCOUNT_ID` as a repository variable for the deployment account.
+2. Save a dedicated Cloudflare API token as the repository secret `CLOUDFLARE_API_TOKEN`. Scope it to the deployment account and `styleguide.fyi` zone, with Workers deployment access, D1 edit access for migrations, and Workers Routes write access for the configured custom domains.
+3. Push or merge to `main`. For a previously failed deployment, choose **Re-run failed jobs** on the latest main workflow to reuse that run's verified artifact.
+
+The production job checks credentials before installing dependencies or modifying Cloudflare. Each successful main run applies the newsletter migration, deploys the verified site artifact and plugin Worker, and checks both live endpoints. Pull request runs never deploy production.
+
 Validate a preview before merging with `pnpm deploy:preview`. To verify an existing build against a deployment, run `pnpm verify:site https://styleguide.fyi --commit <full-sha>`. The existing Chrome WebMCP verifier remains required after tool changes; the HTTP check does not replace browser tool execution.
