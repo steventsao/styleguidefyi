@@ -1,0 +1,50 @@
+---
+interface Props { id?: string; }
+const { id = "newsletter" } = Astro.props;
+---
+
+<section class="newsletter" aria-labelledby={`${id}-title`}>
+	<div class="newsletter-copy">
+		<h2 id={`${id}-title`}>Good code is worth talking about.</h2>
+		<p>Practical articles, useful examples, and changes to the guide. Join the newsletter launch list for occasional emails.</p>
+		<a href="/rss.xml">Prefer a feed? Follow via RSS</a>
+	</div>
+	<form action="/api/newsletter" method="post" class="newsletter-form ph-no-capture ph-mask" data-newsletter>
+		<label for={`${id}-email`}>Email address</label>
+		<div class="newsletter-fields">
+			<input id={`${id}-email`} name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="254" required class="ph-sensitive" />
+			<button type="submit" class="button button-primary">Join the list</button>
+		</div>
+		<div class="newsletter-trap" aria-hidden="true"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off" /></label></div>
+		<label class="newsletter-consent"><input type="checkbox" name="consent" value="yes" required /><span>I’d like emails from styleguide.fyi. I can unsubscribe at any time.</span></label>
+		<p class="newsletter-note">Email delivery hasn’t launched yet. <a href="/privacy">How we use your email</a>.</p>
+		<p class="newsletter-status" role="status" aria-live="polite" tabindex="-1" data-newsletter-status hidden></p>
+		<a data-unsubscribe-link hidden rel="noreferrer">Save your private unsubscribe link</a>
+	</form>
+</section>
+
+<script>
+	import "../scripts/newsletter";
+</script>
+
+<style>
+	.newsletter { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; padding: 32px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+	h2 { margin: 0 0 12px; max-width: 22ch; font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+	.newsletter-copy p { max-width: 48ch; margin: 0 0 12px; color: var(--text-secondary); }
+	.newsletter-copy > a, .newsletter-note, .newsletter-consent, .newsletter-status, [data-unsubscribe-link] { font-size: 0.875rem; }
+	.newsletter-form { min-width: 0; align-self: center; }
+	.newsletter-form > label { display: block; margin-bottom: 8px; font-weight: 500; }
+	.newsletter-fields { display: flex; gap: 8px; }
+	input[type="email"] { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); background: var(--bg-raised); font: inherit; }
+	input::placeholder { color: var(--text-secondary); opacity: 1; }
+	button { justify-content: center; flex-shrink: 0; min-height: 46px; }
+	button:disabled { opacity: 0.65; cursor: wait; }
+	.newsletter-form .newsletter-consent { display: flex; gap: 8px; align-items: flex-start; margin: 14px 0 0; font-weight: 400; color: var(--text-secondary); }
+	.newsletter-consent input { flex-shrink: 0; width: 16px; height: 16px; margin: 3px 0 0; }
+	.newsletter-note { margin: 8px 0 0; color: var(--text-secondary); }
+	.newsletter-status { margin: 12px 0 0; }
+	.newsletter-status[data-error] { color: var(--avoid); }
+	.newsletter-trap { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+	@media (max-width: 720px) { .newsletter { grid-template-columns: 1fr; gap: 24px; } }
+	@media (max-width: 380px) { .newsletter-fields { flex-direction: column; } }
+</style>

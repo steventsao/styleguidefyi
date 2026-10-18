@@ -41,3 +41,15 @@
 /llms.txt
   Access-Control-Allow-Origin: *
   Content-Type: text/plain; charset=utf-8
+
+/rss.xml
+  Content-Type: application/rss+xml; charset=utf-8
+  Access-Control-Allow-Origin: *
+
+/newsletter/unsubscribe
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow
+
+/newsletter/unsubscribe/
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow

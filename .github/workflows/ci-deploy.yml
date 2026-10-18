@@ -65,6 +65,7 @@ jobs:
       - name: Verify built site through the local Cloudflare runtime
         shell: bash
         run: |
+          pnpm newsletter:migrate:local
           pnpm exec wrangler dev --local --config wrangler.jsonc --ip 127.0.0.1 --port 4321 > /tmp/styleguide-preview.log 2>&1 &
           preview_pid=$!
           trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
@@ -81,6 +82,7 @@ jobs:
             exit 1
           fi
           pnpm verify:site http://127.0.0.1:4321 --commit "$DEPLOY_COMMIT_SHA"
+          pnpm verify:newsletter http://127.0.0.1:4321 --allow-write
         env:
           DEPLOY_COMMIT_SHA: ${{ github.sha }}
           WRANGLER_SEND_METRICS: 'false'
@@ -121,6 +123,7 @@ jobs:
         run: |
           test -n "$CLOUDFLARE_API_TOKEN" || { echo 'Missing repository secret CLOUDFLARE_API_TOKEN'; exit 1; }
           test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo 'Missing repository variable CLOUDFLARE_ACCOUNT_ID'; exit 1; }
+          pnpm exec wrangler d1 migrations apply NEWSLETTER_DB --remote --config wrangler.jsonc
           pnpm exec wrangler deploy --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

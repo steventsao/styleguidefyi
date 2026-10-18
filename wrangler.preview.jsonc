@@ -2,11 +2,17 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "styleguidefyi-shell",
 	"compatibility_date": "2026-02-24",
+	"main": "src/newsletter/worker.ts",
+	"vars": { "PREVIEW": "true" },
 	"workers_dev": true,
 	"preview_urls": false,
 	"assets": {
 		"directory": "./dist",
-		"not_found_handling": "404-page"
+		"not_found_handling": "404-page",
+		"binding": "ASSETS",
+		"run_worker_first": true
 	},
+	"d1_databases": [{ "binding": "NEWSLETTER_DB", "database_name": "styleguidefyi-newsletter-preview", "database_id": "65fb3d89-a130-4ac6-a8e5-374a5db4bcbf", "migrations_dir": "migrations" }],
+	"ratelimits": [{ "name": "NEWSLETTER_LIMITER", "namespace_id": "2026101702", "simple": { "limit": 10, "period": 60 } }],
 	"routes": []
 }

@@ -21,6 +21,8 @@ function llmsTxt(): string {
 		].join("\n"),
 		"## Sections",
 		sections.join("\n"),
+		"## Articles",
+		`- [Blog](${styleguide.url}/blog): original articles explaining coding practices, with links to related rules.\n- [RSS feed](${styleguide.url}/rss.xml): published blog articles.\n- [About](${styleguide.url}/about): editorial context and corrections.`,
 	].join("\n\n") + "\n";
 }
 
