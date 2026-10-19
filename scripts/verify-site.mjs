@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { parseArgs } from "node:util";
 import { setTimeout } from "node:timers/promises";
 import { load } from "cheerio";
+import { verifyDesignSystems } from "./verify-design-systems.mjs";
 import { verifyBlog } from "./verify-blog.mjs";
 
 const { values, positionals } = parseArgs({ options: { commit: { type: "string" } }, allowPositionals: true });
@@ -91,4 +92,5 @@ for (const path of ["styleguide.md", "consensus.json", "references.md", "referen
 }
 await get("/missing-org/missing-repo", 404);
 const articles = await verifyBlog(get, home);
-console.log(JSON.stringify({ origin: base.origin, revision: values.commit ?? "not asserted", requests, captures: captures.length, readersAndCollections: pages.size, licenses: licenses.length, articles, result: "passed" }, null, 2));
+const designSystems = await verifyDesignSystems(get, home);
+console.log(JSON.stringify({ origin: base.origin, revision: values.commit ?? "not asserted", requests, captures: captures.length, readersAndCollections: pages.size, licenses: licenses.length, articles, designSystems, result: "passed" }, null, 2));

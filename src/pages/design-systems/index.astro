@@ -1,0 +1,38 @@
+---
+import Base from "../../layouts/Base.astro";
+import DesignSpecimen from "../../components/DesignSpecimen.astro";
+import { designSystems } from "../../data/design-systems";
+import { designSystemPath } from "../../lib/design-systems";
+import "../../styles/design-systems.css";
+const title = "Design system examples: GitHub, Atlassian, IBM & GOV.UK — styleguide.fyi";
+const description = "Explore four design systems visually. Sourced color tokens, typography, spacing, interactive examples, and downloadable references for Primer, Atlassian, Carbon, and GOV.UK.";
+const schema = [{ "@type": "CollectionPage", "@id": "https://styleguide.fyi/design-systems#collection", url: "https://styleguide.fyi/design-systems", name: "Design system visual references", description, mainEntity: { "@type": "ItemList", numberOfItems: designSystems.length, itemListElement: designSystems.map((system, index) => ({ "@type": "ListItem", position: index + 1, name: `${system.company}: ${system.name}`, url: `https://styleguide.fyi${designSystemPath(system)}` })) } }];
+---
+<Base title={title} description={description} canonicalPath="/design-systems" markdownUrl={null} structuredData={schema} ogImagePath="/og/design-systems.png" ogImageAlt="Four visual design system references: GitHub Primer, Atlassian, IBM Carbon, and GOV.UK">
+	<div class="design-page">
+		<header class="design-hero">
+			<p class="design-eyebrow">The visual reference collection</p>
+			<h1>Design systems,<br />made visible.</h1>
+			<p class="lede">A closer look at the decisions behind familiar interfaces. Explore the colors, type, and spacing of established design systems, with every value linked to its source.</p>
+			<div class="design-actions"><a class="button button-primary" href="#collection">Explore {designSystems.length} systems <span aria-hidden="true">↓</span></a><a class="text-link" href="#compare">Compare the foundations</a></div>
+			<div class="design-meta"><span class="verified">● Official sources checked</span><span>October 19, 2026</span><span>Original visual specimens</span></div>
+		</header>
+		<section class="design-section" id="collection" aria-labelledby="collection-heading">
+			<div class="design-section-heading"><h2 id="collection-heading">Different products. Shared foundations.</h2><small>01 — 04 / THE COLLECTION</small></div>
+			<div class="design-grid">
+				{designSystems.map((system) => <article class="design-entry">
+					<DesignSpecimen system={system} compact />
+					<div class="design-entry-head"><div><span class="entry-company">{system.company} · {system.category}</span><h3><a href={designSystemPath(system)}>{system.name}</a></h3></div><div class="design-palette-strip" aria-hidden="true">{system.colors.slice(2, 7).map((color) => <span style={`--swatch:${color.value}`} />)}</div></div>
+					<p>{system.introduction.split(". ").slice(0, 2).join(". ")}.</p>
+					<a class="entry-link" href={designSystemPath(system)}>Explore {system.company}’s system <span aria-hidden="true">↗</span></a>
+				</article>)}
+			</div>
+		</section>
+		<section class="design-section" id="compare" aria-labelledby="compare-heading">
+			<p class="design-eyebrow">A side-by-side starting point</p><h2 id="compare-heading">Compare the foundations.</h2>
+			<p>These selected values describe the documented systems and themes below. They are useful reference points, not a ranking or a claim that every product screen uses the same settings.</p>
+			<div class="design-table-wrap" tabindex="0" role="region" aria-label="Design system comparison"><table class="design-table"><thead><tr><th scope="col">System</th><th scope="col">Documented typeface</th><th scope="col">Selected body style</th><th scope="col">Spacing example</th></tr></thead><tbody>{designSystems.map((system) => <tr><td><a href={designSystemPath(system)}>{system.name.startsWith(system.company) ? system.name : `${system.company} ${system.name}`}</a></td><td>{system.family}</td><td>{system.typography[2].size}px / {system.typography[2].lineHeight}px<br /><small>{system.typography[2].label}</small></td><td>{system.spacing[3].token}<br /><small>{system.spacing[3].px}px</small></td></tr>)}</tbody></table></div>
+		</section>
+		<section class="design-section design-method" id="method" aria-labelledby="method-heading"><div><p class="design-eyebrow">How this collection is made</p><h2 id="method-heading">Documented values.<br />Visible decisions.</h2></div><div><ol><li><strong>Start at the official source.</strong> Read the owner’s documentation and published token artifacts. Record the theme, version when pinned, and the date checked.</li><li><strong>Make the foundations tangible.</strong> Render the colors, type hierarchy, and spacing scale. Build original interface specimens to show how the selected foundations can work together.</li><li><strong>Keep the boundaries visible.</strong> Link each value to its source. Label fallback fonts, responsive values, and editorial observations. Offer JSON and Markdown references for reuse.</li></ol><p class="design-note">An independent reference by styleguide.fyi. The examples are original compositions, not screenshots or official components. Brand names identify the systems being studied; no affiliation or endorsement is implied.</p></div></section>
+	</div>
+</Base>

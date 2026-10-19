@@ -1,0 +1,48 @@
+---
+import type { DesignSystem } from "../data/design-systems";
+interface Props { system: DesignSystem }
+const { system } = Astro.props;
+const p = system.preview;
+---
+<div class:list={["design-playground", { "government-sample": system.slug === "govuk" }]} style={`--demo-action:${p.action};--demo-ink:${p.ink};--demo-muted:${p.muted};--demo-surface:${p.surface};--demo-border:${p.border};--demo-radius:${p.radius};--demo-font:${system.previewFamily}`}>
+	<div class="playground-label"><span>INTERACTIVE SPECIMEN</span><span>Light theme</span></div>
+	<form class="demo-form ph-no-capture" data-design-demo>
+		<h3>{p.title}</h3>
+		<p>Try the field, checkbox, and action. Use Tab to inspect keyboard focus.</p>
+		<label for="sample-project">Project name</label>
+		<input id="sample-project" value="Design foundations" maxlength="80" required autocomplete="off" />
+		<label class="demo-checkbox"><input type="checkbox" checked required /> Ready for review</label>
+		<div class="demo-actions"><button type="submit">{p.button} <span aria-hidden="true">→</span></button><button type="reset" class="demo-secondary">Reset</button></div>
+		<p class="demo-status" role="status" aria-live="polite">This example stays in your browser.</p>
+	</form>
+</div>
+<style>
+	.design-playground { color-scheme:light; background:#fff; color:var(--demo-ink); border:1px solid var(--border); font-family:var(--demo-font); }
+	.playground-label { display:flex; justify-content:space-between; gap:12px; background:var(--demo-surface); padding:14px 20px; border-bottom:1px solid var(--demo-border); font:10px/1.4 var(--font-mono); letter-spacing:.04em; color:var(--demo-muted); }
+	.demo-form { max-width:480px; padding:32px; }
+	.demo-form h3 { font-family:var(--demo-font); font-size:24px; line-height:1.25; margin:0 0 12px; }
+	.demo-form > p { font-size:14px; color:var(--demo-muted); margin:0 0 24px; }
+	.demo-form label { display:block; font-size:14px; margin-bottom:8px; font-weight:500; }
+	.demo-form > input { width:100%; font:14px var(--demo-font); background:#fff; color:var(--demo-ink); border:1px solid var(--demo-muted); border-radius:var(--demo-radius); padding:10px 12px; }
+	.demo-form .demo-checkbox { display:flex; align-items:center; gap:8px; margin:18px 0 24px; font-weight:400; }
+	.demo-checkbox input { width:16px; height:16px; accent-color:var(--demo-action); }
+	.demo-actions { display:flex; gap:12px; }
+	.demo-actions button { display:flex; gap:24px; align-items:center; color:#fff; background:var(--demo-action); border:1px solid var(--demo-action); border-radius:var(--demo-radius); padding:10px 14px; font:500 14px var(--demo-font); cursor:pointer; }
+	.demo-actions button:hover { filter:brightness(.92); }
+	.demo-actions .demo-secondary { color:var(--demo-ink); background:#fff; border-color:var(--demo-border); }
+	.demo-form :focus-visible { outline:2px solid var(--demo-action); outline-offset:3px; }
+	.government-sample :focus-visible { outline:3px solid #ffdd00; outline-offset:0; box-shadow:0 0 0 5px #0b0c0c; }
+	.demo-form .demo-status { min-height:40px; margin:20px 0 0; font-size:12px; }
+	@media(max-width:480px) { .demo-form { padding:24px; } }
+</style>
+<script>
+	for (const form of document.querySelectorAll<HTMLFormElement>("[data-design-demo]")) {
+		const input = form.querySelector<HTMLInputElement>("#sample-project")!;
+		const status = form.querySelector<HTMLElement>(".demo-status")!;
+		form.addEventListener("submit", (event) => {
+			event.preventDefault();
+			status.textContent = `Preview complete: ${input.value.trim() || "Design foundations"}. Nothing was sent or saved.`;
+		});
+		form.addEventListener("reset", () => { status.textContent = "This example stays in your browser."; });
+	}
+</script>

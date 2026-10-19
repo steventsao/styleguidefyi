@@ -1,0 +1,112 @@
+---
+import type { DesignSystem } from "../data/design-systems";
+interface Props { system: DesignSystem; compact?: boolean }
+const { system, compact = false } = Astro.props;
+const p = system.preview;
+---
+<div class:list={["design-specimen", `specimen-${system.slug}`, { compact }]} style={`--sample-action:${p.action};--sample-ink:${p.ink};--sample-muted:${p.muted};--sample-surface:${p.surface};--sample-border:${p.border};--sample-radius:${p.radius};--sample-font:${system.previewFamily}`} role="img" aria-label={`Original ${system.name} inspired interface specimen; ${system.theme}. ${system.fontNote}`}>
+	<div class="specimen-top"><span class="specimen-dot"></span><span>{p.eyebrow}</span><span class="specimen-number">{system.company}</span></div>
+	<div class="specimen-content" aria-hidden="true">
+		{system.slug === "github-primer" && <>
+			<div class="specimen-path"><span>◫</span> workspace / <strong>next-release</strong> <span class="sample-pill">Public</span></div>
+			<div class="specimen-tabs"><span class="selected">Overview</span><span>Issues <b>8</b></span><span>Pull requests</span></div>
+			<div class="specimen-toolbar"><span class="sample-secondary">⑂ main <span>⌄</span></span><span class="sample-action">{p.button} +</span></div>
+			<div class="repo-list"><div><span>◫ <b>components</b></span><small>Refine the building blocks</small><small>2h ago</small></div><div><span>◫ <b>tokens</b></span><small>A shared vocabulary</small><small>4h ago</small></div><div><span>≡ <b>README.md</b></span><small>Start with the essentials</small><small>1d ago</small></div></div>
+			<div class="specimen-heading">{p.title}</div><p>Small details. A consistent whole.</p>
+		</>}
+		{system.slug === "atlassian" && <>
+			<div class="workspace-heading"><div><small>WORKSPACE / DESIGN</small><div class="specimen-heading">The next release</div></div><span class="sample-action">{p.button} +</span></div>
+			<div class="board"><div><div class="board-label">TO DO <span>2</span></div><div class="task"><span class="task-tag">FOUNDATIONS</span><strong>Give every color a purpose</strong><small>◈ DS-128 <i>JL</i></small></div><div class="task"><strong>A little more breathing room</strong><small>◈ DS-129 <i>AK</i></small></div></div><div><div class="board-label">IN PROGRESS <span>1</span></div><div class="task"><span class="task-tag green">COMPONENTS</span><strong>Bring the pieces together</strong><small>◈ DS-130 <i>RM</i></small></div></div></div>
+		</>}
+		{system.slug === "ibm-carbon" && <>
+			<div class="carbon-toolbar">Workspace <span>Overview / Reports</span></div><div class="workspace-heading"><div><small>ANALYTICS</small><div class="specimen-heading">Project overview</div></div><span class="sample-action">{p.button} +</span></div>
+			<div class="carbon-metrics"><div><small>Active projects</small><strong>24</strong></div><div><small>In review</small><strong>08</strong></div><div><small>Completed</small><strong>16</strong></div></div>
+			<div class="carbon-row labels"><span>Project</span><span>Region</span><span>Status</span></div><div class="carbon-row"><span>Design foundations</span><span>Global</span><span>● Active</span></div><div class="carbon-row"><span>Component library</span><span>Global</span><span>● Active</span></div>
+		</>}
+		{system.slug === "govuk" && <>
+			<div class="service-header">Example service</div><div class="service-body"><small>Step 2 of 3</small><div class="specimen-heading">Check your details</div><p>Make sure your information is correct before you continue.</p><div class="service-row"><strong>Your name</strong><span>Alex Morgan</span><span class="sample-link">Change</span></div><div class="service-row"><strong>Contact preference</strong><span>Email</span><span class="sample-link">Change</span></div><span class="sample-action">Continue <span>→</span></span></div>
+		</>}
+	</div>
+</div>
+
+<style>
+	.design-specimen { color-scheme: light; color:var(--sample-ink); background:#fff; border:1px solid var(--border); font-family:var(--sample-font); overflow:hidden; }
+	.specimen-top { display:flex; gap:8px; align-items:center; padding:13px 20px; border-bottom:1px solid var(--sample-border); font:10px/1.4 var(--font-mono); letter-spacing:.07em; color:var(--sample-muted); }
+	.specimen-dot { width:6px; height:6px; border-radius:50%; background:var(--sample-action); }
+	.specimen-number { margin-left:auto; letter-spacing:0; }
+	.specimen-content { padding:32px; font-size:14px; line-height:1.5; }
+	.specimen-content small { font-size:11px; color:var(--sample-muted); }
+	.specimen-heading { font-size:28px; font-weight:600; line-height:1.2; margin:20px 0 8px; letter-spacing:-.025em; }
+	.specimen-content p { color:var(--sample-muted); margin:8px 0 0; }
+	.sample-action,.sample-secondary { display:inline-flex; align-items:center; justify-content:space-between; gap:24px; padding:8px 14px; border-radius:var(--sample-radius); font-size:13px; font-weight:600; white-space:nowrap; }
+	.sample-action { color:#fff; background:var(--sample-action); }
+	.sample-secondary { background:var(--sample-surface); border:1px solid var(--sample-border); }
+	.specimen-path { display:flex; align-items:center; gap:8px; color:#0969da; flex-wrap:wrap; }
+	.sample-pill { color:var(--sample-muted); border:1px solid var(--sample-border); border-radius:20px; padding:0 6px; font-size:10px; }
+	.specimen-tabs { display:flex; gap:24px; border-bottom:1px solid var(--sample-border); margin:16px 0; font-size:12px; }
+	.specimen-tabs span { padding:8px 0; }
+	.specimen-tabs .selected { border-bottom:2px solid #fd8c73; font-weight:600; }
+	.specimen-tabs b { background:var(--sample-surface); border-radius:12px; padding:1px 5px; }
+	.specimen-toolbar { display:flex; justify-content:space-between; margin:16px 0; }
+	.repo-list { border:1px solid var(--sample-border); border-radius:6px; overflow:hidden; }
+	.repo-list > div { display:grid; grid-template-columns:1fr 1.3fr auto; gap:10px; padding:10px 12px; align-items:center; }
+	.repo-list > div+div { border-top:1px solid var(--sample-border); }
+	.repo-list b { font-weight:400; font-size:12px; }
+	.workspace-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+	.workspace-heading .specimen-heading { margin:8px 0 0; }
+	.board { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+	.board > div { background:var(--sample-surface); padding:12px; border-radius:6px; }
+	.board-label { display:flex; justify-content:space-between; font-size:10px; font-weight:600; color:var(--sample-muted); margin-bottom:16px; }
+	.task { background:#fff; border:1px solid var(--sample-border); padding:14px; border-radius:6px; margin-top:10px; }
+	.task strong { display:block; font-size:13px; line-height:1.4; margin:8px 0 18px; font-weight:500; }
+	.task small { display:flex; justify-content:space-between; align-items:center; }
+	.task i { border-radius:50%; background:#e9f2ff; color:#1868db; font-style:normal; font-size:9px; padding:4px; }
+	.task-tag { display:inline-block; background:#e9f2ff; color:#1558bc; font-size:8px; font-weight:600; padding:3px 5px; border-radius:3px; }
+	.task-tag.green { background:#efffd6; color:#4c6b1f; }
+	.carbon-toolbar { margin:-32px -32px 24px; padding:12px 24px; background:#161616; color:white; font-size:12px; }
+	.carbon-toolbar span { float:right; color:#c6c6c6; font-size:10px; }
+	.specimen-ibm-carbon .specimen-heading { font-weight:400; }
+	.specimen-ibm-carbon .sample-action { padding:14px 16px; font-weight:400; }
+	.carbon-metrics { display:grid; grid-template-columns:repeat(3,1fr); background:var(--sample-surface); margin:0 0 24px; }
+	.carbon-metrics > div { padding:16px; border-right:1px solid var(--sample-border); }
+	.carbon-metrics strong { display:block; font-size:36px; font-weight:400; line-height:1.3; }
+	.carbon-row { display:grid; grid-template-columns:1.6fr 1fr .8fr; padding:12px; gap:8px; border-bottom:1px solid var(--sample-border); font-size:12px; }
+	.carbon-row.labels { background:#e0e0e0; font-weight:600; }
+	.service-header { padding:14px 24px; margin:-32px -32px 24px; background:#0b0c0c; color:white; font-weight:700; border-bottom:5px solid #1d70b8; }
+	.service-body { max-width:560px; margin:auto; }
+	.service-body .specimen-heading { font-size:32px; font-weight:700; }
+	.service-body p { max-width:42ch; color:var(--sample-ink); font-size:16px; margin-bottom:20px; }
+	.service-row { display:grid; grid-template-columns:1.3fr 1fr auto; gap:12px; border-bottom:1px solid var(--sample-border); padding:13px 0; font-size:13px; }
+	.sample-link { color:#1a65a6; text-decoration:underline; }
+	.service-body .sample-action { margin-top:24px; box-shadow:0 3px 0 #043b27; font-weight:400; }
+	.compact .specimen-content { min-height:355px; padding:24px; }
+	.compact .specimen-heading { font-size:24px; }
+	.compact .repo-list > div { grid-template-columns:1fr auto; }
+	.compact .repo-list small:last-child { display:none; }
+	.compact .carbon-toolbar,.compact .service-header { margin:-24px -24px 22px; }
+	.compact .sample-action { gap:12px; padding:8px 10px; font-size:11px; }
+	.compact .task { padding:10px; }
+	.compact .service-body p { font-size:14px; }
+	.compact .service-row { font-size:12px; }
+	@media(max-width:600px) {
+		.specimen-content,.compact .specimen-content { padding:20px; min-height:0; }
+		.specimen-top { padding:12px; }
+		.repo-list > div { grid-template-columns:1fr auto; }
+		.repo-list small:last-child { display:none; }
+		.repo-list > div { padding:8px; }
+		.specimen-path { font-size:12px; }
+		.workspace-heading { align-items:flex-start; }
+		.workspace-heading .specimen-heading { font-size:22px; }
+		.sample-action { font-size:11px; gap:8px; padding:8px 10px; }
+		.board { gap:8px; }
+		.board > div { padding:8px; }
+		.task { padding:8px; }
+		.task strong { font-size:12px; }
+		.carbon-toolbar,.service-header,.compact .carbon-toolbar,.compact .service-header { margin:-20px -20px 20px; }
+		.carbon-row { font-size:10px; padding:10px 6px; }
+		.carbon-metrics > div { padding:12px; }
+		.service-row { grid-template-columns:1fr 1fr; font-size:12px; }
+		.service-row .sample-link { display:none; }
+		.service-body .specimen-heading { font-size:27px; }
+	}
+</style>
