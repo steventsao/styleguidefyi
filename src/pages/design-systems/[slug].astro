@@ -1,0 +1,57 @@
+---
+import Base from "../../layouts/Base.astro";
+import DesignSpecimen from "../../components/DesignSpecimen.astro";
+import DesignPlayground from "../../components/DesignPlayground.astro";
+import { designSystems, type DesignSystem } from "../../data/design-systems";
+import { designSystemPath, sourceFor } from "../../lib/design-systems";
+import "../../styles/design-systems.css";
+export function getStaticPaths() { return designSystems.map((system) => ({ params: { slug: system.slug }, props: { system } })); }
+interface Props { system: DesignSystem }
+const { system } = Astro.props;
+const path = designSystemPath(system);
+const name = system.company === "GitHub" ? "GitHub Primer" : system.company === "IBM" ? "IBM Carbon" : system.name;
+const seoName = name.endsWith("Design System") ? name : `${name} design system`;
+const sections = [["colors", "01 / Color palette"], ["typography", "02 / Typography"], ["spacing", "03 / Spacing"], ["playground", "04 / Try the interface"], ["principles", "05 / Reading the system"], ["sources", "06 / Sources & downloads"]];
+const schema = [
+	{ "@type": "TechArticle", "@id": `https://styleguide.fyi${path}#reference`, headline: `${name}: a visual design system reference`, description: system.description, url: `https://styleguide.fyi${path}`, datePublished: system.checked, dateModified: system.checked, inLanguage: "en", author: { "@id": "https://styleguide.fyi/#publisher" }, publisher: { "@id": "https://styleguide.fyi/#publisher" }, image: `https://styleguide.fyi/og/${system.slug}.png`, citation: system.sources.map((source) => source.url), about: { "@type": "Thing", name: system.name, url: system.website } },
+	{ "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Design systems", item: "https://styleguide.fyi/design-systems" }, { "@type": "ListItem", position: 2, name, item: `https://styleguide.fyi${path}` }] },
+];
+---
+<Base title={`${seoName}: colors, typography & spacing — styleguide.fyi`} description={system.description} canonicalPath={path} markdownUrl={`${path}.md`} structuredData={schema} article={{ published: system.checked, modified: system.checked }} ogImagePath={`/og/${system.slug}.png`} ogImageAlt={`${name}: a visual reference to colors, typography, and spacing`}>
+	<article class="design-page">
+		<nav class="design-breadcrumbs" aria-label="Breadcrumb"><a href="/design-systems">Design systems</a><span aria-hidden="true">/</span><span>{system.company}</span></nav>
+		<header class="design-hero">
+			<p class="design-eyebrow">{system.company} / {system.category}</p><h1>{system.name}<span style="color:var(--accent)">.</span></h1>
+			<p class="lede">{system.introduction}</p>
+			<div class="design-actions"><a class="button button-primary" href="#colors">Explore the foundations ↓</a><a class="button" href={system.website}>Official documentation ↗</a><a class="text-link" href={`${path}.json`} download={`${system.slug}.json`}>Download reference</a></div>
+			<div class="design-meta"><span class="verified">● Sources checked {system.checked}</span><span>Independent visual reference</span></div>
+		</header>
+		<dl class="design-facts"><div><dt>Theme in this reference</dt><dd>{system.theme}</dd></div><div><dt>Documented typeface</dt><dd>{system.family}</dd></div><div><dt>Selected foundations</dt><dd>{system.colors.length} colors · {system.typography.length} type styles · {system.spacing.length} spacing steps</dd></div></dl>
+		<figure style="margin:32px 0 0"><DesignSpecimen system={system} /><figcaption class="design-note" style="margin-top:12px">Original composition using selected foundations. Illustrative layout and controls; {system.company === "IBM" ? "IBM Plex Sans" : "fallback fonts"} shown. See typography notes below.</figcaption></figure>
+		<div class="design-detail-layout">
+			<aside class="design-toc"><nav aria-label="On this page">{sections.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}<a href="/design-systems">← All design systems</a></nav></aside>
+			<div class="design-detail-content">
+				<section class="design-section" id="colors" aria-labelledby="colors-heading"><p class="design-eyebrow">01 / Foundations</p><h2 id="colors-heading">Color, with a purpose.</h2><p>Selected values for {system.theme.toLowerCase()}. Each token links to its source. Select a hex value to copy it; the documented role tells you where it belongs.</p><div class="design-swatch-grid">{system.colors.map((color) => <div class="design-swatch"><div class="design-swatch-paint" style={`--swatch:${color.value}`}><button type="button" data-copy-color={color.value} aria-label={`Copy ${color.value}, ${color.role}`}>{color.value}</button></div><strong>{color.role}</strong><a href={sourceFor(system, color.source).url}>{color.token} ↗</a></div>)}</div><p class="copy-status" role="status" aria-live="polite" id="color-copy-status"></p></section>
+				<section class="design-section" id="typography" aria-labelledby="type-heading"><p class="design-eyebrow">02 / Foundations</p><h2 id="type-heading">A hierarchy you can read.</h2><p>{system.fontNote}</p><div class="design-type-controls ph-no-capture"><label for="type-preview">Try your own text</label><input id="type-preview" type="text" maxlength="100" placeholder="The details make the difference." autocomplete="off" /></div>{system.typography.map((type) => <div class="type-row"><div class="type-meta"><a href={sourceFor(system, type.source).url}>{type.label} ↗</a><span>{type.size}px / {type.lineHeight}px · {type.weight}</span></div><p class="type-sample" data-type-sample style={`--specimen-font:${system.previewFamily};--type-size:${type.size}px;--type-line:${type.lineHeight}px;--type-weight:${type.weight};${type.smallSize ? `--small-type-size:${type.smallSize}px;--small-type-line:${type.smallLineHeight}px;` : ""}`}>The details make the difference.</p>{type.smallSize && <p class="type-small-note">At 640px and below: {type.smallSize}px / {type.smallLineHeight}px. The specimen responds with the viewport.</p>}</div>)}</section>
+				<section class="design-section" id="spacing" aria-labelledby="spacing-heading"><p class="design-eyebrow">03 / Foundations</p><h2 id="spacing-heading">Room to breathe.</h2><p>{system.spacingNote}</p><div class="spacing-chart">{system.spacing.map((space) => <div class="spacing-row"><a href={sourceFor(system, space.source).url}>{space.token}</a><span class="spacing-bar" style={`--space:${space.px}px`} aria-hidden="true"></span><span class="spacing-value">{space.px}px</span></div>)}</div><p class="spacing-caption">Bars are proportionally enlarged for readability. Labels show the actual values.</p></section>
+				<section class="design-section" id="playground" aria-labelledby="playground-heading"><p class="design-eyebrow">04 / In context</p><h2 id="playground-heading">Try the interface.</h2><p>An original, working specimen using selected colors and a fallback-aware font stack. It demonstrates the visual direction; production components have more states and behavior.</p><DesignPlayground system={system} /></section>
+				<section class="design-section" id="principles" aria-labelledby="principles-heading"><p class="design-eyebrow">05 / Reading the system</p><h2 id="principles-heading">What holds it together.</h2><div class="design-principles">{system.principles.map((principle) => <div class="design-principle"><h3>{principle.title}</h3><p>{principle.text}</p><a href={sourceFor(system, principle.source).url}>Read the supporting documentation ↗</a></div>)}</div><div class="design-takeaway"><p class="design-eyebrow">Our editorial takeaway</p><p>{system.takeaway}</p></div></section>
+				<section class="design-section" id="sources" aria-labelledby="sources-heading"><p class="design-eyebrow">06 / Provenance</p><h2 id="sources-heading">Go straight to the source.</h2><p>{system.caveat}</p><p class="design-note">Checked {system.checked}. This is a curated reference, not a complete extraction or a continuously synchronized mirror.</p><ul class="design-sources">{system.sources.map((source) => <li><a href={source.url}>{source.title} ↗</a><p>{source.detail}</p></li>)}</ul><div class="design-download"><a class="button" href={`${path}.json`} download={`${system.slug}.json`}>Download JSON ↓</a><a class="button" href={`${path}.md`} download={`${system.slug}.md`}>Download Markdown ↓</a></div><p class="design-note">The downloads retain source URLs, the checked date, and scope notes. They are reference data, not installable design tokens. Independent work by styleguide.fyi; not affiliated with or endorsed by {system.company}.</p></section>
+			</div>
+		</div>
+		<section class="design-section" aria-labelledby="related-heading" style="border-top:1px solid var(--border);padding-top:32px"><h2 id="related-heading">Keep exploring.</h2><div class="design-related">{designSystems.filter((related) => related.slug !== system.slug).map((related) => <a href={designSystemPath(related)}>{related.company} / {related.name} ↗</a>)}</div></section>
+	</article>
+</Base>
+<script>
+	const preview = document.querySelector<HTMLInputElement>("#type-preview");
+	preview?.addEventListener("input", () => {
+		for (const sample of document.querySelectorAll("[data-type-sample]")) sample.textContent = preview.value || "The details make the difference.";
+	});
+	for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy-color]")) {
+		button.addEventListener("click", async () => {
+			const status = document.querySelector<HTMLElement>("#color-copy-status")!;
+			try { await navigator.clipboard.writeText(button.dataset.copyColor!); status.textContent = `Copied ${button.dataset.copyColor} to clipboard.`; }
+			catch { status.textContent = `Could not copy automatically. Select this value to copy: ${button.dataset.copyColor}`; }
+		});
+	}
+</script>

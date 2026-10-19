@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { styleguide } from "../data/styleguide";
 import { countRules } from "../lib/styleguide";
+import { designSystems } from "../data/design-systems";
 
 /**
  * The llms.txt entry point: one file that tells an agent what this site holds and
@@ -21,6 +22,9 @@ function llmsTxt(): string {
 		].join("\n"),
 		"## Sections",
 		sections.join("\n"),
+		"## Visual design system references",
+		`- [Design system collection](${styleguide.url}/design-systems): ${designSystems.length} independent visual references with official sources, stated themes, and original interactive specimens.`,
+		...designSystems.map((system) => `- [${system.company}: ${system.name}](${styleguide.url}/design-systems/${system.slug}.md): selected colors, typography, spacing, and source links; checked ${system.checked}. JSON is available at ${styleguide.url}/design-systems/${system.slug}.json.`),
 		"## Articles",
 		`- [Blog](${styleguide.url}/blog): original articles explaining coding practices, with links to related rules.\n- [RSS feed](${styleguide.url}/rss.xml): published blog articles.\n- [About](${styleguide.url}/about): editorial context and corrections.`,
 	].join("\n\n") + "\n";

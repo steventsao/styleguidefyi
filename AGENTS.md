@@ -40,6 +40,9 @@ Copy `.env.example` to `.env` before the first build, and put the real PostHog t
 | `src/scripts/shell-client.ts` | Creates a browser worker on demand and enforces its lifetime |
 | `src/scripts/page.ts`        | Browser script: registers the tools, runs the filter, the Run buttons and the copy button |
 | `src/pages/index.astro`      | The page                                                                                  |
+| `src/data/design-systems.ts` | Curated visual design-system references, with per-value sources, theme, and checked date |
+| `src/pages/design-systems/` | Visual collection, individual references, and source-bearing JSON/Markdown exports |
+| `scripts/verify-design-systems.mjs` | Release checks for references, exports, source links, sitemap, and social images; included in `verify:site` |
 | `src/pages/styleguide.md.ts` | Static endpoint for the markdown version                                                  |
 | `src/pages/consensus.json.ts` | Static endpoint for reviewer assessments |
 | `public/_headers`            | CORS and charset for the markdown, consensus and llms endpoints |
@@ -53,6 +56,8 @@ Copy `.env.example` to `.env` before the first build, and put the real PostHog t
 | `scripts/fixtures/exec-cases.json` | Reviewed `exec` results; `guide-tool-cases.json` preserves the four original tools. Both feed unit/live checks |
 
 ## Rules
+
+- Design-system references are independent studies. Keep exact values tied to official documentation or pinned published artifacts, distinguish specimens from official components, and state fallback fonts. Recheck sources before changing the checked date. Run `node scripts/og/design-systems.mjs` after changing their names or palettes.
 
 - Blog posts live in `src/content/blog/*.md`, validated by `src/content.config.ts`. Use original writing, stable slugs, explicit dates, real sources, and valid `relatedRules`. Draft/future posts are excluded from routes and RSS.
 - Newsletter signups remain `pending`: no email sender or ownership verification is configured. Do not send campaigns to pending addresses. Never expose subscriber data in public endpoints, logs, fixtures, or analytics.
