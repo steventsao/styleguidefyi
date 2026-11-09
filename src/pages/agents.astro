@@ -1,0 +1,165 @@
+---
+import { Code } from "astro:components";
+import Base from "../layouts/Base.astro";
+import { blogPath, publishedPosts } from "../lib/blog";
+import { styleguide } from "../data/styleguide";
+import { compactMarkdown, ruleEntries, rulePath, topicPageMarkdown, topicPath } from "../lib/rule-pages";
+import { styleguideToMarkdown } from "../lib/styleguide";
+
+const CODE_THEMES = { light: "github-light", dark: "github-dark" } as const;
+const lineCount = (text: string) => text.trimEnd().split("\n").length;
+const ruleCount = ruleEntries(styleguide).length;
+const compactLines = lineCount(compactMarkdown(styleguide));
+const fullLines = lineCount(styleguideToMarkdown(styleguide));
+const sections = styleguide.sections.map((section) => ({ section, lines: lineCount(topicPageMarkdown(styleguide, section)) }));
+const agentRules = styleguide.sections.find((section) => section.id === "agents")!.rules;
+const articles = (await publishedPosts()).filter((post) => post.data.category === "AI agents");
+
+const description = `Add ${ruleCount} coding rules to AGENTS.md, CLAUDE.md, Cursor rules or Copilot instructions. Pick a ${compactLines}-line version, one topic, or the full guide, as Markdown.`;
+const canonical = "https://styleguide.fyi/agents";
+const schema = [
+	{
+		"@type": "TechArticle",
+		"@id": `${canonical}#article`,
+		headline: "Coding rules for AI coding agents",
+		description,
+		url: canonical,
+		mainEntityOfPage: canonical,
+		dateModified: styleguide.updated,
+		inLanguage: "en",
+		isAccessibleForFree: true,
+		isPartOf: { "@id": `${styleguide.url}/#guide` },
+		author: { "@type": "Person", name: "Steven Tsao" },
+		publisher: { "@id": "https://styleguide.fyi/#publisher" },
+	},
+	{ "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: "https://styleguide.fyi/" }, { "@type": "ListItem", position: 2, name: "For coding agents", item: canonical }] },
+];
+
+const agentsMd = `# One line per rule: ${compactLines} lines
+curl -s ${styleguide.url}/styleguide.compact.md >> AGENTS.md
+
+# Or one topic, with reasons and examples
+curl -s ${styleguide.url}/topics/errors.md >> AGENTS.md`;
+const claudeImport = `@AGENTS.md
+
+## Claude Code
+
+Add instructions that apply only to Claude Code below the import.`;
+const claudeRules = `mkdir -p .claude/rules
+curl -s ${styleguide.url}/topics/tests.md -o .claude/rules/tests.md`;
+const claudeScoped = `---
+paths:
+  - "**/*.test.ts"
+---
+
+# Rules for tests
+
+(the contents of ${styleguide.url}/topics/tests.md)`;
+const cursor = `mkdir -p .cursor/rules
+curl -s ${styleguide.url}/styleguide.compact.md -o .cursor/rules/coding-rules.md`;
+const copilot = `mkdir -p .github
+curl -s ${styleguide.url}/styleguide.compact.md >> .github/copilot-instructions.md`;
+---
+
+<Base title="Coding rules for AI coding agents: AGENTS.md, CLAUDE.md, Cursor | styleguide.fyi" description={description} canonicalPath="/agents" markdownUrl="/styleguide.compact.md" structuredData={schema}>
+	<article class="agents-page">
+		<header>
+			<p class="agents-eyebrow">{ruleCount} rules · Markdown · updated {styleguide.updated}</p>
+			<h1>Coding rules for AI coding agents.</h1>
+			<p class="agents-lede">A coding agent follows the rules it can read. This page shows how to put the guide into the instruction file your agent loads: <code>AGENTS.md</code>, <code>CLAUDE.md</code>, Cursor rules or Copilot instructions.</p>
+		</header>
+
+		<section aria-labelledby="size-title">
+			<h2 id="size-title">Choose how much to add</h2>
+			<p>An instruction file is read in full at the start of every session, so its length has a cost. Claude Code's documentation says to <a href="https://code.claude.com/docs/en/memory#write-effective-instructions">target under 200 lines</a> per file, because longer files “consume more context and reduce adherence.” The full guide is {fullLines} lines. Start smaller.</p>
+			<table>
+				<thead><tr><th scope="col">Version</th><th scope="col">Length</th><th scope="col">What it contains</th></tr></thead>
+				<tbody>
+					<tr><th scope="row"><a href="/styleguide.compact.md">styleguide.compact.md</a></th><td>{compactLines} lines</td><td>Every rule as one imperative line, grouped by topic. Reasons and examples stay at the links.</td></tr>
+					<tr><th scope="row"><a href="/rules">One topic or one rule</a></th><td>{Math.min(...sections.map(({ lines }) => lines))}–{Math.max(...sections.map(({ lines }) => lines))} lines per topic</td><td>The rules for one subject, with reasons and examples. Use it for the area where your agent makes mistakes.</td></tr>
+					<tr><th scope="row"><a href="/styleguide.md">styleguide.md</a></th><td>{fullLines} lines</td><td>The whole guide. Better as a reference an agent reads on request than as an always-loaded file.</td></tr>
+				</tbody>
+			</table>
+		</section>
+
+		<section aria-labelledby="agents-md-title">
+			<h2 id="agents-md-title">AGENTS.md</h2>
+			<p><code>AGENTS.md</code> is a plain Markdown file at the root of a repository that several coding agents read. Append the rules, then read what you appended and delete what does not fit your project.</p>
+			<Code code={agentsMd} lang="bash" themes={CODE_THEMES} />
+		</section>
+
+		<section aria-labelledby="claude-title">
+			<h2 id="claude-title">Claude Code: CLAUDE.md and .claude/rules</h2>
+			<p>Claude Code reads <code>CLAUDE.md</code>. According to <a href="https://code.claude.com/docs/en/memory#agents-md">its documentation</a>, it reads <code>AGENTS.md</code> instead when the working directory and the directories above it hold no <code>CLAUDE.md</code>. If your repository has both files, import one from the other so every tool shares the same rules:</p>
+			<Code code={claudeImport} lang="markdown" themes={CODE_THEMES} />
+			<p>For a larger project, keep topics in separate files under <code>.claude/rules/</code>:</p>
+			<Code code={claudeRules} lang="bash" themes={CODE_THEMES} />
+			<p>A rule file can be limited to matching paths with a <code>paths</code> field, so it loads only when Claude works on those files. That keeps test rules out of sessions that never touch a test:</p>
+			<Code code={claudeScoped} lang="markdown" themes={CODE_THEMES} />
+		</section>
+
+		<section aria-labelledby="cursor-title">
+			<h2 id="cursor-title">Cursor rules</h2>
+			<p>Cursor reads project rules from the <code>.cursor/rules</code> directory. Save the rules there as a file. Cursor's rule files accept frontmatter that controls when a rule applies; see the <a href="https://cursor.com/docs/context/rules">Cursor rules documentation</a> for the current fields.</p>
+			<Code code={cursor} lang="bash" themes={CODE_THEMES} />
+		</section>
+
+		<section aria-labelledby="copilot-title">
+			<h2 id="copilot-title">GitHub Copilot instructions</h2>
+			<p>GitHub Copilot reads repository instructions from <code>.github/copilot-instructions.md</code>. See <a href="https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions">GitHub's documentation</a> for path-specific instruction files.</p>
+			<Code code={copilot} lang="bash" themes={CODE_THEMES} />
+		</section>
+
+		<section aria-labelledby="topics-title">
+			<h2 id="topics-title">Pick rules by topic</h2>
+			<p>Each topic is a page to read and a Markdown file to save. Replace <code>errors</code> in the commands above with any id below.</p>
+			<table>
+				<thead><tr><th scope="col">Topic</th><th scope="col">Rules</th><th scope="col">Markdown</th></tr></thead>
+				<tbody>{sections.map(({ section, lines }) => <tr><th scope="row"><a href={topicPath(section)}>{section.title}</a></th><td>{section.rules.length}</td><td><a href={`${topicPath(section)}.md`}><code>/topics/{section.id}.md</code></a> · {lines} lines</td></tr>)}</tbody>
+			</table>
+		</section>
+
+		<section aria-labelledby="edit-title">
+			<h2 id="edit-title">Edit the rules before you rely on them</h2>
+			<p>These rules are proposed defaults, not your project's instruction file. Three steps make them useful:</p>
+			<ol>
+				<li><strong>Delete what you disagree with.</strong> Every rule page records what two reviewers thought of the wording, including where they disagreed. A rule your team does not follow teaches the agent to ignore the file.</li>
+				<li><strong>Add what only your project knows.</strong> The build and test commands, the directories that must not be touched, the library you standardized on. A general guide cannot supply these.</li>
+				<li><strong>Enforce what a tool can check.</strong> Formatting and lint rules belong in a formatter and a linter. Keep the instruction file for decisions that need judgment.</li>
+			</ol>
+			<p>The guide's own rules for agents apply to this setup:</p>
+			<ul>{agentRules.map((rule) => <li><a href={rulePath(rule)}>{rule.title}</a></li>)}</ul>
+		</section>
+
+		<section aria-labelledby="live-title">
+			<h2 id="live-title">Let an agent read the guide directly</h2>
+			<p>An agent can also fetch a rule when it needs one. <a href="/llms.txt">llms.txt</a> lists every file. In a browser, the home page registers <a href="/#webmcp">read-only WebMCP tools</a> that list sections, search rules and run <code>grep</code> over a virtual copy of the guide.</p>
+		</section>
+
+		{articles.length > 0 && (
+			<section aria-labelledby="reading-title">
+				<h2 id="reading-title">Further reading</h2>
+				<ul>{articles.map((post) => <li><a href={blogPath(post)}>{post.data.title}</a></li>)}</ul>
+			</section>
+		)}
+	</article>
+</Base>
+
+<style is:global>
+	.agents-page { max-width: 760px; margin: 0 auto; padding: 56px 24px 0; }
+	.agents-eyebrow { margin: 0 0 12px; font-family: var(--font-mono); font-size: 0.8125rem; color: var(--accent); }
+	.agents-page h1 { margin: 0 0 20px; font-size: clamp(2.25rem, 6vw, 3.25rem); font-weight: 600; line-height: 1.08; letter-spacing: -0.03em; text-wrap: balance; }
+	.agents-lede { margin: 0; max-width: 62ch; font-size: 1.125rem; color: var(--text-secondary); }
+	.agents-page section { margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
+	.agents-page h2 { margin: 0 0 12px; font-size: 1.5rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; }
+	.agents-page section p { margin: 0 0 16px; max-width: 68ch; color: var(--text-secondary); }
+	.agents-page section li { margin: 8px 0; max-width: 66ch; color: var(--text-secondary); }
+	.agents-page section li strong { color: var(--text); font-weight: 600; }
+	.agents-page .astro-code { margin: 0 0 20px; padding: 14px 16px; font-size: 0.8125rem; line-height: 1.6; border: 1px solid var(--border); border-radius: var(--radius); background: var(--code-bg) !important; overflow-x: auto; }
+	.agents-page table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+	.agents-page th, .agents-page td { padding: 10px 12px 10px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+	.agents-page thead th { font-size: 0.8125rem; font-weight: 500; color: var(--muted); }
+	.agents-page tbody th { font-weight: 500; }
+	.agents-page td { color: var(--text-secondary); }
+	@media (max-width: 560px) { .agents-page { padding: 32px 16px 0; } .agents-page table { font-size: 0.875rem; } }
+</style>

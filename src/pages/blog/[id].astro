@@ -31,7 +31,7 @@ const schema = [
 			<header class="article-header"><h1>{post.data.title}</h1><p class="article-description">{post.data.description}</p><p class="article-meta">By <a href="/about">styleguide.fyi</a><span>Published <time datetime={published}>{formatDate(post.data.published)}</time></span>{post.data.updated && <span>Updated <time datetime={modified}>{formatDate(post.data.updated)}</time></span>}<span>{readingMinutes(post.body)} min read</span><span>{post.data.category}</span></p></header>
 			<div class="article-layout">
 				<aside><nav aria-label="In this article"><p>In this article</p><ol>{headings.filter((heading) => heading.depth === 2).map((heading) => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ol></nav></aside>
-				<div class="article-body"><Content /><section class="related-rules" aria-labelledby="related-rules-title"><h2 id="related-rules-title">The rules behind this article</h2><ul>{relatedRules.map((rule) => <li><a href={`/#${rule.id}`}>{rule.title}</a></li>)}</ul></section></div>
+				<div class="article-body"><Content /><section class="related-rules" aria-labelledby="related-rules-title"><h2 id="related-rules-title">The rules behind this article</h2><ul>{relatedRules.map((rule) => <li><a href={`/rules/${rule.id}`}>{rule.title}</a></li>)}</ul></section></div>
 			</div>
 		</article>
 		<section class="related-posts" aria-labelledby="continue-title"><h2 id="continue-title">Keep reading</h2>{related.map((item) => <a href={blogPath(item)}>{item.data.title}</a>)}</section>

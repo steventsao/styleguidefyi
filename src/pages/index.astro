@@ -7,6 +7,7 @@ import Newsletter from "../components/Newsletter.astro";
 import { blogPath, publishedPosts } from "../lib/blog";
 import { styleguide } from "../data/styleguide";
 import { countRules } from "../lib/styleguide";
+import { rulePath, topicPath } from "../lib/rule-pages";
 import { createTools, shellToolMetadata } from "../lib/webmcp-tools";
 
 const ruleCount = countRules(styleguide);
@@ -67,8 +68,8 @@ const shellExamples = [
 ---
 
 <Base
-	title="styleguide.fyi — a common coding style guide"
-	description={`${ruleCount} coding rules with TypeScript examples. Available as Markdown and through WebMCP.`}
+	title={`Coding style guide: ${ruleCount} rules with TypeScript examples | styleguide.fyi`}
+	description={`${ruleCount} coding rules for people and AI coding agents. Each has a reason, a TypeScript example and reviewer ratings. Free as Markdown for AGENTS.md or CLAUDE.md.`}
 >
 	<script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
 
@@ -81,6 +82,8 @@ const shellExamples = [
 			<a class="button" href="#consensus">Astra × Fable ratings</a>
 			<button type="button" class="button button-primary" id="copy-markdown">Copy as markdown</button>
 			<a class="button" href="/styleguide.md">styleguide.md</a>
+			<a class="button" href="/rules">All rules by topic</a>
+			<a class="button" href="/agents">Use with a coding agent</a>
 			<a class="button" href="#webmcp">WebMCP tools</a>
 			<a class="button" href="#references">Style guide references</a>
 			<a class="button" href="/library">Captured guides</a>
@@ -119,7 +122,7 @@ const shellExamples = [
 					<section class="guide-section" id={section.id} data-section>
 						<header class="section-header">
 							<p class="section-number">{String(sectionIndex + 1).padStart(2, "0")}</p>
-							<h2>{section.title}</h2>
+							<h2><a class="section-link" href={topicPath(section)}>{section.title}</a></h2>
 							{section.summary && <p class="section-summary">{section.summary}</p>}
 						</header>
 
@@ -129,7 +132,7 @@ const shellExamples = [
 									<a class="rule-number" href={`#${rule.id}`} aria-label={`Link to rule: ${rule.title}`}>
 										{sectionIndex + 1}.{ruleIndex + 1}
 									</a>
-									<span set:html={inlineCode(rule.title)} />
+									<a class="rule-title" href={rulePath(rule)} set:html={inlineCode(rule.title)} />
 								</h3>
 								<p class="rule-why" set:html={inlineCode(rule.why)} />
 								{(rule.avoid || rule.prefer) && (
@@ -172,7 +175,7 @@ const shellExamples = [
 				</header>
 
 				<h3>1. Markdown, for a terminal agent</h3>
-				<p>The whole guide is one file. Append it to the instructions your agent already reads.</p>
+				<p>The whole guide is one file. Append it to the instructions your agent already reads. For a shorter version, single topics, and setup for <code>CLAUDE.md</code>, Cursor and Copilot, see <a href="/agents">coding rules for AI coding agents</a>.</p>
 				<Code code="curl -s https://styleguide.fyi/styleguide.md >> AGENTS.md" lang="bash" themes={CODE_THEMES} />
 
 				<h3>2. WebMCP, for a browser agent</h3>
@@ -442,6 +445,11 @@ const shellExamples = [
 		font-size: 0.8125rem;
 		font-weight: 400;
 		color: var(--muted);
+		text-decoration: none;
+	}
+
+	.rule-title,
+	.section-link {
 		text-decoration: none;
 	}
 

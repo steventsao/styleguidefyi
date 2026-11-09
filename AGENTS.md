@@ -44,6 +44,11 @@ Copy `.env.example` to `.env` before the first build, and put the real PostHog t
 | `src/pages/design-systems/` | Visual collection, individual references, and source-bearing JSON/Markdown exports |
 | `scripts/verify-design-systems.mjs` | Release checks for references, exports, source links, sitemap, and social images; included in `verify:site` |
 | `src/pages/styleguide.md.ts` | Static endpoint for the markdown version                                                  |
+| `src/lib/rule-pages.ts`      | Paths, metadata and Markdown for `/rules/<id>`, `/topics/<section-id>` and `/styleguide.compact.md` |
+| `src/data/topics.ts`         | Heading and introduction for each topic page. One entry per guide section |
+| `src/pages/agents.astro`     | Setup page for `AGENTS.md`, `CLAUDE.md`, Cursor and Copilot |
+| `scripts/verify-rules.mjs`   | Release checks for rule, topic and agent pages; included in `verify:site` |
+| `docs/seo-strategy.md`       | Page structure, content plan and what to measure |
 | `src/pages/consensus.json.ts` | Static endpoint for reviewer assessments |
 | `public/_headers`            | CORS and charset for the markdown, consensus and llms endpoints |
 | `src/lib/analytics.ts`       | Event names and `track`: clamps properties, queues until the client loads, never throws |
@@ -64,6 +69,9 @@ Copy `.env.example` to `.env` before the first build, and put the real PostHog t
 - Preview and production use separate newsletter databases. Apply D1 migrations before deployment. `pnpm verify:newsletter <local-or-preview-origin> --allow-write` creates and removes a reserved test signup; it refuses production.
 - Preserve `noindex` on unsubscribe pages and all preview responses. Only canonical reading pages belong in the sitemap; Markdown remains discoverable through alternate links and `llms.txt`.
 
+- Every rule has a page at `/rules/<id>` and every section a page at `/topics/<section-id>`, both generated from `src/data/styleguide.ts`. A new section needs an entry in `src/data/topics.ts`; the build fails without it. `ruleUrl` still returns the home-page anchor because the tools and fixtures depend on it.
+- State a fact about another tool's instruction files on `/agents` or in an article only after checking that tool's documentation, and link to it.
+- Page URLs have no trailing slash: canonicals, the sitemap and internal links all use that form, and `html_handling: "drop-trailing-slash"` serves it without a redirect. Keep the setting in both Wrangler configs.
 - To change the guide, edit `src/data/styleguide.ts` only. Rule ids are public URL anchors and WebMCP lookup keys: do not rename them.
 - Reviewers fill only their own `reviews` entry. `null` means Not rated, never Neutral. Record the current `ruleFingerprint(rule)` as `reviewedHash` only after assessing the wording; do not refresh other reviewers' hashes after editing a rule. Stale assessments must remain Needs review until reassessed.
 - WebMCP entry point is `document.modelContext` (current spec, Chrome 149+). `navigator.modelContext` is the old one; the page falls back to it.

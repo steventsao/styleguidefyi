@@ -1,0 +1,142 @@
+---
+import { Code } from "astro:components";
+import Base from "../../layouts/Base.astro";
+import RuleBody from "../../components/RuleBody.astro";
+import { blogPath, publishedPosts } from "../../lib/blog";
+import { styleguide } from "../../data/styleguide";
+import { AGREEMENT_LABELS, REVIEWERS, reviewStatus } from "../../lib/consensus";
+import { metaDescription, plainText, ruleEntries, rulePath, titleWithoutPeriod, topicPath, type RuleEntry } from "../../lib/rule-pages";
+
+export function getStaticPaths() {
+	const entries = ruleEntries(styleguide);
+	return entries.map((entry, index) => ({
+		params: { id: entry.rule.id },
+		props: { entry, previous: entries[index - 1] ?? null, next: entries[index + 1] ?? null },
+	}));
+}
+
+interface Props { entry: RuleEntry; previous: RuleEntry | null; next: RuleEntry | null; }
+const { entry, previous, next } = Astro.props;
+const { rule, section, number } = entry;
+
+const path = rulePath(rule);
+const canonical = new URL(path, Astro.site).href;
+const heading = plainText(rule.title);
+const description = metaDescription(rule.why);
+const siblings = section.rules.filter((candidate) => candidate.id !== rule.id);
+const articles = (await publishedPosts()).filter((post) => post.data.relatedRules.includes(rule.id));
+const reviews = REVIEWERS.map(({ id, name }) => ({ name, review: rule.reviews?.[id] ?? null, status: reviewStatus(rule, rule.reviews?.[id]) }))
+	.filter(({ review }) => review);
+const installCommand = `curl -s ${styleguide.url}${path}.md >> AGENTS.md`;
+
+function inlineCode(text: string): string {
+	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+const schema = [
+	{
+		"@type": "TechArticle",
+		"@id": `${canonical}#rule`,
+		headline: heading,
+		description,
+		url: canonical,
+		mainEntityOfPage: canonical,
+		dateModified: styleguide.updated,
+		inLanguage: "en",
+		isAccessibleForFree: true,
+		articleSection: section.title,
+		isPartOf: { "@id": `${styleguide.url}/#guide` },
+		author: { "@type": "Person", name: "Steven Tsao" },
+		publisher: { "@id": "https://styleguide.fyi/#publisher" },
+		...(rule.references?.length ? { citation: rule.references.map((reference) => ({ "@type": "CreativeWork", name: reference.title, url: reference.url })) } : {}),
+	},
+	{
+		"@type": "BreadcrumbList",
+		itemListElement: [
+			{ "@type": "ListItem", position: 1, name: "Home", item: "https://styleguide.fyi/" },
+			{ "@type": "ListItem", position: 2, name: "Rules", item: "https://styleguide.fyi/rules" },
+			{ "@type": "ListItem", position: 3, name: section.title, item: new URL(topicPath(section), Astro.site).href },
+			{ "@type": "ListItem", position: 4, name: heading, item: canonical },
+		],
+	},
+];
+---
+
+<Base title={`${titleWithoutPeriod(rule.title)} | styleguide.fyi`} description={description} canonicalPath={path} markdownUrl={`${path}.md`} structuredData={schema}>
+	<div class="rule-page">
+		<nav class="rule-breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/rules">Rules</a><span aria-hidden="true">/</span><a href={topicPath(section)}>{section.title}</a></nav>
+		<article>
+			<header>
+				<p class="rule-eyebrow">Rule {number} · {section.title}</p>
+				<h1 set:html={inlineCode(rule.title)} />
+			</header>
+			<RuleBody rule={rule} />
+
+			{reviews.length > 0 && (
+				<section class="rule-section" aria-labelledby="reviews-title">
+					<h2 id="reviews-title">What the reviewers said</h2>
+					<p class="rule-note">Two reviewers assessed this rule's wording independently. A rating is one assessment, not an established consensus. <a href="/#consensus">See every rating</a>.</p>
+					<dl class="rule-reviews">
+						{reviews.map(({ name, review, status }) => (
+							<div>
+								<dt>{name} <span class="rule-rating" data-rating={status === "current" ? review!.rating : "outdated"}>{status === "current" ? AGREEMENT_LABELS[review!.rating] : "Needs review"}</span></dt>
+								<dd>{review!.rationale}{status !== "current" && " This assessment was written for earlier wording."} <time datetime={review!.reviewedAt}>Reviewed {review!.reviewedAt}</time></dd>
+							</div>
+						))}
+					</dl>
+				</section>
+			)}
+
+			<section class="rule-section" aria-labelledby="install-title">
+				<h2 id="install-title">Give this rule to your coding agent</h2>
+				<p class="rule-note">This rule is also a Markdown file. Append it to the instruction file your agent reads, or <a href="/agents">choose a larger set of rules</a>.</p>
+				<Code code={installCommand} lang="bash" themes={{ light: "github-light", dark: "github-dark" }} />
+				<p class="rule-links"><a href={`${path}.md`}>This rule as Markdown</a><a href={`/#${rule.id}`}>This rule in the full guide</a></p>
+			</section>
+
+			{articles.length > 0 && (
+				<section class="rule-section" aria-labelledby="articles-title">
+					<h2 id="articles-title">Articles that use this rule</h2>
+					<ul class="rule-list">{articles.map((post) => <li><a href={blogPath(post)}>{post.data.title}</a></li>)}</ul>
+				</section>
+			)}
+
+			<section class="rule-section" aria-labelledby="siblings-title">
+				<h2 id="siblings-title">More rules in “{section.title}”</h2>
+				<ul class="rule-list">{siblings.map((sibling) => <li><a href={rulePath(sibling)} set:html={inlineCode(sibling.title)} /></li>)}</ul>
+				<p class="rule-links"><a href={topicPath(section)}>All {section.rules.length} rules in this section</a><a href="/rules">All {ruleEntries(styleguide).length} rules</a></p>
+			</section>
+		</article>
+		<nav class="rule-pager" aria-label="Previous and next rule">
+			{previous ? <a href={rulePath(previous.rule)} rel="prev"><span>Previous · {previous.number}</span>{plainText(previous.rule.title)}</a> : <span />}
+			{next ? <a href={rulePath(next.rule)} rel="next"><span>Next · {next.number}</span>{plainText(next.rule.title)}</a> : <span />}
+		</nav>
+	</div>
+</Base>
+
+<style is:global>
+	.rule-page { max-width: 760px; margin: 0 auto; padding: 32px 24px 0; }
+	.rule-breadcrumbs { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--text-secondary); font-size: 0.875rem; }
+	.rule-eyebrow { margin: 40px 0 12px; font-family: var(--font-mono); font-size: 0.8125rem; color: var(--accent); }
+	.rule-page h1 { margin: 0 0 24px; font-size: clamp(1.875rem, 5vw, 2.75rem); font-weight: 600; line-height: 1.12; letter-spacing: -0.03em; text-wrap: balance; }
+	.rule-page h1 code { font-size: 0.85em; }
+	.rule-section { margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
+	.rule-section h2 { margin: 0 0 12px; font-size: 1.375rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; }
+	.rule-note { margin: 0 0 16px; max-width: 64ch; color: var(--text-secondary); }
+	.rule-reviews { margin: 0; display: grid; gap: 20px; }
+	.rule-reviews dt { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-weight: 600; }
+	.rule-reviews dd { margin: 6px 0 0; max-width: 68ch; color: var(--text-secondary); }
+	.rule-reviews time { display: block; margin-top: 4px; font-size: 0.8125rem; color: var(--muted); }
+	.rule-rating { padding: 2px 8px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; border: 1px solid var(--border); border-radius: 999px; color: var(--text-secondary); }
+	.rule-rating[data-rating="strongly-agree"], .rule-rating[data-rating="somewhat-agree"] { color: var(--prefer); border-color: currentColor; }
+	.rule-rating[data-rating="strongly-disagree"], .rule-rating[data-rating="somewhat-disagree"] { color: var(--avoid); border-color: currentColor; }
+	.rule-section > .astro-code { margin: 0; padding: 14px 16px; font-size: 0.8125rem; line-height: 1.6; border: 1px solid var(--border); border-radius: var(--radius); background: var(--code-bg) !important; overflow-x: auto; }
+	.rule-list { margin: 0; padding-left: 20px; }
+	.rule-list li { margin: 8px 0; }
+	.rule-links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 16px 0 0; font-size: 0.875rem; color: var(--text-secondary); }
+	.rule-pager { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); }
+	.rule-pager a { display: block; text-decoration: none; line-height: 1.4; }
+	.rule-pager a[rel="next"] { text-align: right; }
+	.rule-pager a span { display: block; margin-bottom: 4px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+	@media (max-width: 560px) { .rule-page { padding: 24px 16px 0; } .rule-pager { grid-template-columns: 1fr; } .rule-pager a[rel="next"] { text-align: left; } }
+</style>

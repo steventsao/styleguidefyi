@@ -19,7 +19,7 @@ const rendered = capture ? renderMirror(readSnapshot(capture.id, capture.sourceH
 const title = capture?.title ?? collection.title;
 ---
 
-<Mirror title={`${title} — styleguide.fyi`} description={`Saved public guide: ${title}. Original attribution, capture details and source downloads.`} canonicalPath={`/${capture?.route ?? collection.id}`}>
+<Mirror title={`${title} — styleguide.fyi`} description={capture ? `${title} by ${capture.author}: a readable capture with a table of contents, the original source link, license (${capture.license.label}) and capture date.` : `Saved public guides from ${collection.id}, with original attribution, license and capture details.`} canonicalPath={`/${capture?.route ?? collection.id}`}>
 	<nav class="mirror-breadcrumbs" aria-label="Breadcrumb">
 		<a href="/library">Captured guides</a>
 		{capture && capture.route !== collection.id && <a href={`/${collection.id}`}>{collection.id}</a>}
