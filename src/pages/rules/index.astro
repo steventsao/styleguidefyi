@@ -1,0 +1,61 @@
+---
+import Base from "../../layouts/Base.astro";
+import { styleguide } from "../../data/styleguide";
+import { topics } from "../../data/topics";
+import { plainText, ruleEntries, rulePath, topicPath } from "../../lib/rule-pages";
+
+const entries = ruleEntries(styleguide);
+const description = `All ${entries.length} coding rules in the styleguide.fyi guide, grouped into ${styleguide.sections.length} topics. Each rule has its own page with the reason, an example and reviewer assessments.`;
+const schema = [
+	{
+		"@type": "CollectionPage",
+		"@id": "https://styleguide.fyi/rules#collection",
+		url: "https://styleguide.fyi/rules",
+		name: "Coding rules",
+		description,
+		isPartOf: { "@id": "https://styleguide.fyi/#website" },
+		mainEntity: {
+			"@type": "ItemList",
+			numberOfItems: entries.length,
+			itemListElement: entries.map(({ rule }, index) => ({ "@type": "ListItem", position: index + 1, name: plainText(rule.title), url: new URL(rulePath(rule), Astro.site).href })),
+		},
+	},
+	{ "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: "https://styleguide.fyi/" }, { "@type": "ListItem", position: 2, name: "Rules", item: "https://styleguide.fyi/rules" }] },
+];
+---
+
+<Base title={`${entries.length} coding rules, each with a reason and an example | styleguide.fyi`} description={description} canonicalPath="/rules" markdownUrl="/styleguide.compact.md" structuredData={schema}>
+	<div class="rules-index">
+		<header>
+			<p class="rules-eyebrow">{entries.length} rules · {styleguide.sections.length} topics · updated {styleguide.updated}</p>
+			<h1>Every coding rule, one page each.</h1>
+			<p class="rules-lede">Each rule states what to do and why. Most show an example to avoid next to one to prefer, and every rule records what two reviewers thought of its wording.</p>
+			<p class="rules-actions"><a class="button" href="/">Read the guide on one page</a><a class="button" href="/styleguide.compact.md">All rules as one-line Markdown</a><a class="button" href="/agents">Use the rules with a coding agent</a></p>
+		</header>
+		{styleguide.sections.map((section, sectionIndex) => (
+			<section aria-labelledby={`topic-${section.id}`}>
+				<div class="rules-topic">
+					<h2 id={`topic-${section.id}`}><a href={topicPath(section)}>{section.title}</a></h2>
+					<p>{plainText(topics[section.id].intro)}</p>
+				</div>
+				<ol>{section.rules.map((rule, ruleIndex) => <li><span>{sectionIndex + 1}.{ruleIndex + 1}</span><a href={rulePath(rule)}>{plainText(rule.title)}</a></li>)}</ol>
+			</section>
+		))}
+	</div>
+</Base>
+
+<style>
+	.rules-index { max-width: var(--page-width); margin: 0 auto; padding: 64px 24px 0; }
+	.rules-eyebrow { margin: 0 0 16px; font-family: var(--font-mono); font-size: 0.8125rem; color: var(--accent); }
+	h1 { margin: 0 0 20px; max-width: 18ch; font-size: clamp(2.25rem, 6vw, 3.5rem); font-weight: 600; line-height: 1.08; letter-spacing: -0.03em; text-wrap: balance; }
+	.rules-lede { max-width: 62ch; margin: 0 0 24px; font-size: 1.125rem; color: var(--text-secondary); }
+	.rules-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 40px; }
+	section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px 48px; padding: 32px 0; border-top: 1px solid var(--border); }
+	h2 { margin: 0 0 8px; font-size: 1.375rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; }
+	h2 a { text-decoration: none; }
+	.rules-topic p { margin: 0; max-width: 44ch; font-size: 0.9375rem; color: var(--text-secondary); }
+	ol { list-style: none; margin: 0; padding: 0; }
+	li { display: flex; gap: 12px; align-items: baseline; padding: 6px 0; }
+	li span { flex: none; width: 36px; font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted); }
+	@media (max-width: 760px) { .rules-index { padding: 40px 16px 0; } section { grid-template-columns: 1fr; } }
+</style>

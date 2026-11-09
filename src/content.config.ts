@@ -9,7 +9,7 @@ const blog = defineCollection({
 		description: z.string().min(50).max(180),
 		published: z.coerce.date(),
 		updated: z.coerce.date().optional(),
-		category: z.enum(["Code review", "TypeScript", "Engineering practice"]),
+		category: z.enum(["Code review", "TypeScript", "Engineering practice", "AI agents", "Reliability"]),
 		relatedRules: z.array(z.string()).min(1),
 		draft: z.boolean().default(false),
 	}).refine((post) => !post.updated || post.updated >= post.published, {

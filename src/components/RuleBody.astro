@@ -1,0 +1,45 @@
+---
+import { Code } from "astro:components";
+import type { Rule } from "../data/styleguide";
+
+interface Props { rule: Rule; }
+const { rule } = Astro.props;
+const CODE_THEMES = { light: "github-light", dark: "github-dark" } as const;
+const lang = (rule.lang ?? "ts") as any;
+
+/** Rule text uses backticks for inline code and nothing else. */
+function inlineCode(text: string): string {
+	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+---
+
+<p class="rule-why" set:html={inlineCode(rule.why)} />
+{(rule.avoid || rule.prefer) && (
+	<div class="rule-examples">
+		{rule.avoid && <figure class="rule-example rule-example-avoid"><figcaption>Avoid</figcaption><Code code={rule.avoid} lang={lang} themes={CODE_THEMES} /></figure>}
+		{rule.prefer && <figure class="rule-example rule-example-prefer"><figcaption>Prefer</figcaption><Code code={rule.prefer} lang={lang} themes={CODE_THEMES} /></figure>}
+	</div>
+)}
+{rule.references && (
+	<div class="rule-references">
+		<p>Sources</p>
+		<ul>{rule.references.map((reference) => <li><a href={reference.url}>{reference.title}</a> <span>({reference.by})</span></li>)}</ul>
+	</div>
+)}
+
+<style is:global>
+	.rule-why { margin: 0; max-width: 68ch; font-size: 1.0625rem; line-height: 1.7; color: var(--text-secondary); }
+	.rule-examples { display: grid; gap: 12px; margin-top: 20px; }
+	.rule-example { margin: 0; min-width: 0; border: 1px solid var(--border); border-left: 3px solid var(--muted); border-radius: var(--radius); background: var(--code-bg); overflow: hidden; }
+	.rule-example-avoid { border-left-color: var(--avoid); }
+	.rule-example-prefer { border-left-color: var(--prefer); }
+	.rule-example figcaption { padding: 6px 14px 0; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+	.rule-example-avoid figcaption { color: var(--avoid); }
+	.rule-example-prefer figcaption { color: var(--prefer); }
+	.rule-example .astro-code { margin: 0; padding: 10px 14px 12px; font-size: 0.8125rem; line-height: 1.6; background: var(--code-bg) !important; overflow-x: auto; }
+	.rule-references { margin-top: 20px; font-size: 0.875rem; color: var(--text-secondary); }
+	.rule-references p { margin: 0 0 4px; font-weight: 500; color: var(--text); }
+	.rule-references ul { margin: 0; padding-left: 20px; }
+	.rule-references li { margin: 4px 0; }
+	.rule-references span { color: var(--muted); }
+</style>

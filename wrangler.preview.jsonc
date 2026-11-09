@@ -9,6 +9,9 @@
 	"assets": {
 		"directory": "./dist",
 		"not_found_handling": "404-page",
+		// Canonical URLs, the sitemap and internal links have no trailing slash. Serve that form directly;
+		// the default redirects it to the slash form, which makes every canonical URL a redirect.
+		"html_handling": "drop-trailing-slash",
 		"binding": "ASSETS",
 		"run_worker_first": true
 	},
